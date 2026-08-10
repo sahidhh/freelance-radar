@@ -1,5 +1,6 @@
+import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Mail, Pencil, Trash2, CheckCircle2 } from "lucide-react"
+import { Mail, Pencil, Trash2, CheckCircle2, ClipboardCopy } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { StatusBadge } from "@/components/StatusBadge"
@@ -7,6 +8,7 @@ import { useActivitiesForLead, useLead, useOutreachForLead } from "@/lib/hooks"
 import { deleteLead, setStatus } from "@/db/leads"
 import { formatDate, formatValueRange } from "@/lib/format"
 import { getNextActionLabel, isTerminalStatus } from "@/lib/nextAction"
+import { buildResearchPrompt } from "@/lib/researchPrompt"
 import type { LeadStatus } from "@/db/schema"
 
 function primaryAction(
@@ -51,10 +53,18 @@ export default function LeadDetail() {
   const { lead, refresh } = useLead(id)
   const { outreach } = useOutreachForLead(id)
   const { activities } = useActivitiesForLead(id)
+  const [copied, setCopied] = useState(false)
 
   if (!lead) return <div>Loading…</div>
 
   const action = primaryAction(lead.status, lead.id)
+
+  async function handleCopyPrompt() {
+    if (!lead) return
+    await navigator.clipboard.writeText(buildResearchPrompt(lead))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   async function handleDelete() {
     if (!lead) return
@@ -113,6 +123,13 @@ export default function LeadDetail() {
 
       <div className="grid grid-cols-3 gap-6">
         <div className="col-span-2 flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-medium text-on-surface">Research</h3>
+            <Button variant="secondary" size="sm" onClick={handleCopyPrompt}>
+              <ClipboardCopy className="h-3.5 w-3.5" />
+              {copied ? "Copied!" : "Copy Research Prompt"}
+            </Button>
+          </div>
           <Card>
             <CardHeader>
               <CardTitle>Opportunity</CardTitle>
