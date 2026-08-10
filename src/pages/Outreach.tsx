@@ -6,7 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useLeads, useOutreach } from "@/lib/hooks"
-import { createOutreach, markReplied, markSent, updateOutreach } from "@/db/outreach"
+import { createOutreach, getOutreachForLead, markReplied, markSent, updateOutreach } from "@/db/outreach"
 import { setStatus } from "@/db/leads"
 import { buildOutreachDraft, nextOutreachType } from "@/lib/outreachTemplate"
 import { buildMailto } from "@/lib/mailto"
@@ -53,33 +53,35 @@ export default function Outreach() {
     if (!lead) return
     handledLeadIdRef.current = requestedLeadId
 
-    const forLead = outreach
-      .filter((o) => o.leadId === requestedLeadId)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    const type = nextOutreachType(forLead)
-    const existingDraft = forLead.find((o) => o.status === "draft" && o.type === type)
+    // Fetch straight from IndexedDB rather than trusting the outreach hook's
+    // state, which can still be an empty first-render fetch mid-flight —
+    // that race previously produced duplicate drafts.
+    getOutreachForLead(requestedLeadId).then((forLead) => {
+      const type = nextOutreachType(forLead)
+      const existingDraft = forLead.find((o) => o.status === "draft" && o.type === type)
 
-    if (existingDraft) {
-      setSelectedId(existingDraft.id)
-      setSearchParams({}, { replace: true })
-      return
-    }
+      if (existingDraft) {
+        setSelectedId(existingDraft.id)
+        setSearchParams({}, { replace: true })
+        return
+      }
 
-    const draft = buildOutreachDraft(lead, type)
-    createOutreach({
-      leadId: lead.id,
-      type,
-      subject: draft.subject,
-      body: draft.body,
-      followUpDate: null,
-      notes: "",
-    }).then((created) => {
-      refresh()
-      setSelectedId(created.id)
-      setSearchParams({}, { replace: true })
+      const draft = buildOutreachDraft(lead, type)
+      return createOutreach({
+        leadId: lead.id,
+        type,
+        subject: draft.subject,
+        body: draft.body,
+        followUpDate: null,
+        notes: "",
+      }).then((created) => {
+        refresh()
+        setSelectedId(created.id)
+        setSearchParams({}, { replace: true })
+      })
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requestedLeadId, leadsById, outreach])
+  }, [requestedLeadId, leadsById])
 
   const filtered = useMemo(() => {
     const list = filter === "all" ? outreach : outreach.filter((o) => o.status === filter)
