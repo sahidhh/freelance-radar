@@ -116,3 +116,21 @@ IndexedDB only. Data survives refresh. Works with no server. JSON export/import 
 **REMOVE**: "Probability to Close" field (not in data model, redundant with score), tags/chips system on Lead Detail, notification bell icon, Kanban "Add Column" button (contradicts fixed lifecycle), user avatar/account block (no auth/multi-user).
 
 **ADD**: Outreach screen, Projects screen, Add/Edit Lead screen, Settings screen, "Copy Research Prompt" button, score/scoreReason display (drives "Hot" filter), Outreach history list on Lead Detail, LOST column/status everywhere, follow-ups-due-today widget on Dashboard.
+
+## Implementation defaults (resolved ambiguities)
+
+These are fixed so an autonomous implementation pass never has to stop and ask. If a future human wants different behavior, change here first, then code.
+
+- **`score`**: integer 0-100, entered manually (no auto-calc). "Hot" filter and Dashboard "High-Score Leads" = `score >= 70`, sorted desc, top 5 shown on Dashboard.
+- **`estimatedEffort`**: enum `'small' | 'medium' | 'large'` (no hour/day estimates — keep it a quick judgment call).
+- **`outreach.status`**: enum `'draft' | 'sent' | 'replied'`.
+- **`outreach.type`**: enum `'initial' | 'follow_up_1' | 'follow_up_2'` (already specified above; restated for completeness).
+- **`project.status`**: enum `'active' | 'completed' | 'on_hold' | 'cancelled'`.
+- **`activity.type`**: enum `'status_change' | 'outreach_sent' | 'outreach_replied' | 'note_added' | 'project_created' | 'other'`.
+- **IDs**: `crypto.randomUUID()` (native, no dependency).
+- **Dates/times**: stored as ISO 8601 strings everywhere (`createdAt`, `updatedAt`, `sentAt`, `followUpDate`, `startDate`, `dueDate`). Displayed via `Intl.DateTimeFormat`, no date library dependency.
+- **Delete vs. archive**: Leads support both. "Archive" (soft — sets `status` unchanged but hides from default Leads list view via an `archived: boolean` field, recoverable) is the default row action. Hard "Delete" (permanent, irreversible) is available from Lead Detail only, behind a confirmation dialog. Outreach/Project/Activity records are never independently deleted (they follow their parent lead's archive state, or are simply immutable history).
+- **`lastContact`** (Leads table column, derived not stored): most recent `outreach.sentAt` among that lead's outreach records with `status != 'draft'`; blank if none.
+- **CSV columns (leads export/import, exact order)**: `id,businessName,website,contactName,email,phone,location,industry,source,sourceUrl,opportunity,problem,suggestedSolution,estimatedValueMin,estimatedValueMax,estimatedEffort,score,scoreReason,status,nextAction,nextActionDate,notes,createdAt,updatedAt`. Header row required. On import: `id` optional (generate if blank/missing), `status` must be a valid enum value or the row is rejected with a row-numbered error, numeric fields must parse as numbers or the row is rejected, unknown extra columns are ignored, required minimum per row is `businessName`.
+- **Testing approach**: no browser/E2E testing in the autonomous pass (no guaranteed visual/browser tool). Use Vitest for pure-logic unit tests only — `nextAction.ts`, `researchPrompt.ts`, `outreachTemplate.ts`, `mailto.ts`, and the CSV parse/validate functions in `exportImport.ts`. These have no IndexedDB dependency, so no test-only polyfill packages are needed. Correctness of IndexedDB CRUD and UI is instead verified by `tsc --noEmit` + `npm run build` passing and by code matching the documented shape — do not add Playwright/Cypress/jsdom-DB polyfills to reach for browser-level testing.
+- **When blocked or genuinely ambiguous during autonomous implementation**: never stop and wait. Make the most conservative choice consistent with this file and `design.md`, log it in `docs/freelance-radar/blockers.md` (one line: what was ambiguous, what was chosen, why), and continue.
