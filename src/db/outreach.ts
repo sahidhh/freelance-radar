@@ -82,6 +82,25 @@ export async function setOutreachStatus(id: string, status: OutreachStatus): Pro
   return updateOutreach(id, { status })
 }
 
+/** Clears a due follow-up reminder after the user has followed up again outside a fresh draft. */
+export async function markFollowedUp(id: string): Promise<Outreach> {
+  const db = await getDB()
+  const existing = await db.get("outreach", id)
+  if (!existing) throw new Error(`Outreach ${id} not found`)
+  const updated = await updateOutreach(id, { followUpDate: null })
+  await logActivity(existing.leadId, "other", "Follow-up marked as contacted")
+  return updated
+}
+
+export async function rescheduleFollowUp(id: string, followUpDate: string): Promise<Outreach> {
+  const db = await getDB()
+  const existing = await db.get("outreach", id)
+  if (!existing) throw new Error(`Outreach ${id} not found`)
+  const updated = await updateOutreach(id, { followUpDate })
+  await logActivity(existing.leadId, "other", `Follow-up rescheduled to ${followUpDate}`)
+  return updated
+}
+
 /** Most recent sentAt among a lead's non-draft outreach records; undefined if none. */
 export function getLastContact(outreachForLead: Outreach[]): string | undefined {
   const sent = outreachForLead

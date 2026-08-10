@@ -65,7 +65,7 @@ export default function Leads() {
           case "contacted":
             return l.status === "CONTACTED"
           case "follow_up":
-            return leadHasDueFollowUp(l.id)
+            return l.status !== "WON" && l.status !== "LOST" && leadHasDueFollowUp(l.id)
           case "won":
             return l.status === "WON"
           case "lost":
