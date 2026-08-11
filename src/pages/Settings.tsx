@@ -128,12 +128,12 @@ export default function Settings() {
           <p className="text-sm text-on-surface-variant">
             Schema version: <span className="font-mono">{EXPORT_VERSION}</span>
           </p>
-          <div className="flex gap-3">
-            <Button variant="secondary" onClick={handleExportJson}>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button variant="secondary" onClick={handleExportJson} className="sm:w-auto">
               <Download className="h-4 w-4" />
               Export JSON (all data)
             </Button>
-            <Button variant="secondary" onClick={handleExportCsv}>
+            <Button variant="secondary" onClick={handleExportCsv} className="sm:w-auto">
               <Download className="h-4 w-4" />
               Export CSV (leads)
             </Button>
@@ -171,7 +171,7 @@ export default function Settings() {
             </div>
           )}
           {jsonPending && (
-            <div className="flex items-center justify-between rounded border border-outline-variant px-3 py-2 text-sm">
+            <div className="flex flex-col gap-3 rounded border border-outline-variant px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
               <span>
                 Replace existing data with {jsonPending.payload.leads.length} leads,{" "}
                 {jsonPending.payload.outreach.length} outreach, {jsonPending.payload.projects.length}{" "}
@@ -221,7 +221,7 @@ export default function Settings() {
             </div>
           )}
           {csvPending && (
-            <div className="flex items-center justify-between rounded border border-outline-variant px-3 py-2 text-sm">
+            <div className="flex flex-col gap-3 rounded border border-outline-variant px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
               <span>Import {csvPending.leads.length} lead(s) from the file?</span>
               <div className="flex gap-2">
                 <Button size="sm" onClick={confirmCsvImport}>

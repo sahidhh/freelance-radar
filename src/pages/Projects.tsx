@@ -43,8 +43,8 @@ export default function Projects() {
   const showCreateForm = Boolean(createForLead) && !existingProjectForLead
 
   return (
-    <div className="grid grid-cols-3 gap-6">
-      <div className="col-span-1 flex flex-col gap-2">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="flex flex-col gap-2 lg:col-span-1">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-on-surface-variant">
           Projects
         </h3>
@@ -87,7 +87,7 @@ export default function Projects() {
         </div>
       </div>
 
-      <div className="col-span-2">
+      <div className="lg:col-span-2">
         {showCreateForm && createForLead && (
           <CreateProjectForm
             lead={createForLead}
@@ -225,7 +225,7 @@ function ProjectDetail({
           <span className="font-medium text-on-surface-variant">Project name</span>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
         </label>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium text-on-surface-variant">Value ($)</span>
             <Input type="number" min="0" value={value} onChange={(e) => setValue(e.target.value)} />
@@ -241,7 +241,7 @@ function ProjectDetail({
             </Select>
           </label>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium text-on-surface-variant">Start date</span>
             <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
@@ -251,7 +251,7 @@ function ProjectDetail({
             <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </label>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium text-on-surface-variant">Payment received ($)</span>
             <Input

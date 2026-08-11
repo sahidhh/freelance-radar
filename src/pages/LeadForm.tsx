@@ -181,7 +181,7 @@ export default function LeadForm() {
         <CardHeader>
           <CardTitle>Business</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Business name *">
             <Input
               value={form.businessName}
@@ -205,7 +205,7 @@ export default function LeadForm() {
         <CardHeader>
           <CardTitle>Contact</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Contact name">
             <Input value={form.contactName} onChange={(e) => set("contactName", e.target.value)} />
           </Field>
@@ -226,7 +226,7 @@ export default function LeadForm() {
         <CardHeader>
           <CardTitle>Source</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Source">
             <Input
               value={form.source}
@@ -275,7 +275,7 @@ export default function LeadForm() {
         <CardHeader>
           <CardTitle>Value</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-3 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Estimated value min ($)">
             <Input
               type="number"
@@ -310,7 +310,7 @@ export default function LeadForm() {
         <CardHeader>
           <CardTitle>Score</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Score (0-100)">
             <Input
               type="number"
@@ -330,7 +330,7 @@ export default function LeadForm() {
         <CardHeader>
           <CardTitle>Status &amp; next action</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-3 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Status">
             <Select
               value={form.status}
@@ -365,11 +365,18 @@ export default function LeadForm() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end gap-3">
-        <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => navigate(-1)}
+          className="w-full sm:w-auto"
+        >
           Cancel
         </Button>
-        <Button type="submit">{isEdit ? "Save changes" : "Add lead"}</Button>
+        <Button type="submit" className="w-full sm:w-auto">
+          {isEdit ? "Save changes" : "Add lead"}
+        </Button>
       </div>
     </form>
   )

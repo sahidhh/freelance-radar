@@ -98,8 +98,8 @@ export default function Dashboard() {
   )
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="grid grid-cols-4 gap-4">
+    <div className="flex flex-col gap-6 sm:gap-8">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <MetricCard label="Pipeline Value" value={formatMoney(pipelineValue)} />
         <MetricCard label="New Leads" value={String(newCount)} />
         <MetricCard label="Qualified Leads" value={String(qualifiedCount)} />
@@ -244,21 +244,25 @@ function ActionRow({
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded border border-outline-variant px-4 py-3">
-      <div className="flex items-center gap-4">
-        <Icon className="h-4 w-4 shrink-0 text-on-surface-variant" />
-        <span className="shrink-0 rounded bg-surface-low px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
-          {item.kind === "follow_up" ? "Follow-up" : "Lead"}
-        </span>
-        <span
-          className={`shrink-0 font-mono text-xs ${overdue ? "text-error" : "text-on-surface-variant"}`}
-        >
-          {formatDate(item.date)}
-        </span>
+    <div className="flex flex-col gap-3 rounded border border-outline-variant px-3 py-3 sm:px-4">
+      <div className="flex items-start gap-3 sm:items-center sm:gap-4">
+        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-on-surface-variant sm:mt-0" />
         <div className="min-w-0 flex-1">
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <span className="shrink-0 rounded bg-surface-low px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
+              {item.kind === "follow_up" ? "Follow-up" : "Lead"}
+            </span>
+            <span
+              className={`shrink-0 font-mono text-xs ${overdue ? "text-error" : "text-on-surface-variant"}`}
+            >
+              {formatDate(item.date)}
+            </span>
+          </div>
           <div className="truncate text-sm font-medium text-on-surface">{item.title}</div>
           <div className="truncate text-xs text-on-surface-variant">{item.description}</div>
         </div>
+      </div>
+      <div className="flex flex-wrap gap-2 sm:pl-8">
         <Button size="sm" variant="secondary" onClick={() => navigate(`/leads/${item.leadId}`)}>
           Open
           <ArrowRight className="h-3.5 w-3.5" />
@@ -284,12 +288,12 @@ function ActionRow({
         )}
       </div>
       {rescheduling && (
-        <div className="flex items-center gap-2 pl-8">
+        <div className="flex flex-wrap items-center gap-2 sm:pl-8">
           <Input
             type="date"
             value={newDate}
             onChange={(e) => setNewDate(e.target.value)}
-            className="w-44"
+            className="w-full sm:w-44"
           />
           <Button size="sm" onClick={handleReschedule}>
             Save
