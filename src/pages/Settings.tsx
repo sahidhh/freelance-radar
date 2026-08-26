@@ -2,6 +2,7 @@ import { useRef, useState } from "react"
 import { Download, Upload } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   EXPORT_VERSION,
   exportAllData,
@@ -13,6 +14,7 @@ import {
   type ExportPayload,
 } from "@/db/exportImport"
 import { getAllLeads } from "@/db/leads"
+import { getStoredApiKey, setStoredApiKey } from "@/lib/jobDataLake"
 import type { Lead } from "@/db/schema"
 
 function downloadFile(filename: string, content: string, mimeType: string) {
@@ -40,6 +42,20 @@ interface CsvImportState {
 export default function Settings() {
   const jsonInputRef = useRef<HTMLInputElement>(null)
   const csvInputRef = useRef<HTMLInputElement>(null)
+
+  const [apiKeyInput, setApiKeyInput] = useState(getStoredApiKey())
+  const [apiKeySaved, setApiKeySaved] = useState(false)
+
+  function handleSaveApiKey() {
+    setStoredApiKey(apiKeyInput.trim())
+    setApiKeySaved(true)
+  }
+
+  function handleClearApiKey() {
+    setStoredApiKey("")
+    setApiKeyInput("")
+    setApiKeySaved(false)
+  }
 
   const [jsonErrors, setJsonErrors] = useState<string[]>([])
   const [jsonPending, setJsonPending] = useState<JsonImportState | null>(null)
@@ -120,6 +136,48 @@ export default function Settings() {
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Discover (JobDataLake)</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <p className="text-sm text-on-surface-variant">
+            Powers the Discover page's job search. Get a free API key at{" "}
+            <a
+              href="https://jobdatalake.com"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary underline"
+            >
+              jobdatalake.com
+            </a>
+            . The key is stored only in this browser (localStorage) and sent directly to
+            JobDataLake's API — never to any other server.
+          </p>
+          <div className="flex gap-2">
+            <Input
+              type="password"
+              placeholder="JobDataLake API key"
+              value={apiKeyInput}
+              onChange={(e) => {
+                setApiKeyInput(e.target.value)
+                setApiKeySaved(false)
+              }}
+              className="max-w-sm"
+            />
+            <Button variant="secondary" onClick={handleSaveApiKey} disabled={!apiKeyInput.trim()}>
+              Save
+            </Button>
+            {getStoredApiKey() && (
+              <Button variant="ghost" onClick={handleClearApiKey}>
+                Clear
+              </Button>
+            )}
+          </div>
+          {apiKeySaved && <p className="text-sm text-success">API key saved.</p>}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Export</CardTitle>
