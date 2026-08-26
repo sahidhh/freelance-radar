@@ -5,6 +5,7 @@ import {
   Kanban,
   Mail,
   Briefcase,
+  Radar,
   Settings as SettingsIcon,
   Plus,
 } from "lucide-react"
@@ -17,12 +18,14 @@ import LeadForm from "@/pages/LeadForm"
 import Pipeline from "@/pages/Pipeline"
 import Outreach from "@/pages/Outreach"
 import Projects from "@/pages/Projects"
+import Discover from "@/pages/Discover"
 import SettingsPage from "@/pages/Settings"
 
 const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/leads", label: "Leads", icon: Users },
   { to: "/pipeline", label: "Pipeline", icon: Kanban },
+  { to: "/discover", label: "Discover", icon: Radar },
   { to: "/outreach", label: "Outreach", icon: Mail },
   { to: "/projects", label: "Projects", icon: Briefcase },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
@@ -35,6 +38,7 @@ function pageTitle(pathname: string): string {
   if (pathname.match(/^\/leads\/[^/]+$/)) return "Lead Detail"
   if (pathname.startsWith("/leads")) return "Leads"
   if (pathname.startsWith("/pipeline")) return "Pipeline"
+  if (pathname.startsWith("/discover")) return "Discover"
   if (pathname.startsWith("/outreach")) return "Outreach"
   if (pathname.startsWith("/projects")) return "Projects"
   if (pathname.startsWith("/settings")) return "Settings"
@@ -100,6 +104,7 @@ export default function App() {
               <Route path="/leads/:id" element={<LeadDetail />} />
               <Route path="/leads/:id/edit" element={<LeadForm />} />
               <Route path="/pipeline" element={<Pipeline />} />
+              <Route path="/discover" element={<Discover />} />
               <Route path="/outreach" element={<Outreach />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/settings" element={<SettingsPage />} />
