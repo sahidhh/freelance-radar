@@ -8,6 +8,13 @@ Make it fast to turn "small businesses found on Instagram" into pitched leads fo
 
 ## Rejected approach, and why
 
+> **Amended 2026-08-27.** The claim below that Meta's terms prohibit automated
+> collection outright is too broad — *Meta v. Bright Data* (N.D. Cal., Jan 2024)
+> held those terms bind logged-in scraping only. The bulk-email conclusion stands.
+> Lead intake is no longer manual-only either: see
+> [`instagram-lead-sourcing-research.md`](./instagram-lead-sourcing-research.md)
+> for the sourcing options and the revised risk line (*never authenticate*).
+
 The original ask was: scrape Instagram for small businesses, then periodically auto-send promotional email. Not building it as specified:
 
 - **Instagram scraping** — Meta's Platform Terms and Instagram's Terms of Use prohibit automated data collection from the platform. This is the same reason `docs/requirements.md` already excludes "LinkedIn/Upwork automation, aggressive scraping" for other platforms — Instagram isn't an exception.
