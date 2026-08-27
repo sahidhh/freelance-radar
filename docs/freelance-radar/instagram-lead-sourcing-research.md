@@ -7,6 +7,13 @@ sourcing options that are actually available, ranked by risk.
 
 Researched 2026-08-27.
 
+> **Reviewed and partly overturned — read**
+> [`instagram-lead-sourcing-review.md`](./instagram-lead-sourcing-review.md) **first.**
+> Option 1 (OpenStreetMap) is rejected outside Europe/US: India has 926
+> `contact:instagram` objects nationwide vs 18,176 in Germany. The review also
+> rejects this document's premise — Instagram caps cold DMs at 5-40/day, so
+> sourcing was never the bottleneck.
+
 ---
 
 ## TL;DR
@@ -96,8 +103,11 @@ per taginfo:
   `contact:website` 128,445 · `shop` 122,258 · `contact:phone` 118,916 ·
   `website` 109,189
 
-Read the last two lines together: a large fraction of the businesses that
-publish an Instagram handle in OSM have **no `website` tag at all**. That is
+Read the last two lines together: a share of the businesses that publish an
+Instagram handle in OSM have **no `website` tag at all**. *(Overstated as
+"a large fraction" here — `website` and `contact:website` may be largely
+disjoint, in which case up to 82% do have one. `brand` also co-occurs 106,960
+times, i.e. ~37% are chain outlets, the anti-ICP. See the review.)* That is
 our ICP, pre-filtered, in a free public database, and Overpass QL can ask for
 it directly:
 

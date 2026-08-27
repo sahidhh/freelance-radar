@@ -15,7 +15,7 @@ headline recommendation.
 | 3 | "A large fraction" of `contact:instagram` objects have no website | **Weakened** — up to 82% have one, and ~37% are chain outlets |
 | 4 | Meta v. Bright Data narrows the ToS question to logged-in scraping | **Upheld, and understated** |
 | 5 | Google Custom Search JSON API is closed to new customers | **Upheld** |
-| 6 | Places is a complement; `websiteUri` ≈ Pro tier, 5k free/mo | **Wrong** — Enterprise SKU, 1,000 free/mo |
+| 6 | Places dismissed as a mere "complement" and dropped from the body | **Wrong call** — it is the better option 1 |
 | 7 | Business Discovery is the sanctioned enrichment path | **Upheld**, but weaker than presented |
 | 8 | *(new idea, tested and killed)* Meta Ad Library as an intent source | **Rejected** outside EU/UK |
 | — | **The premise: that lead sourcing is the bottleneck** | **Rejected** — see [the real bottleneck](#the-claim-that-actually-matters-is-the-premise) |
@@ -101,17 +101,20 @@ From Google's own documentation, verbatim: *"The Custom Search JSON API is
 closed to new customers."* Existing customers are cut off 1 January 2027. No
 retraction needed.
 
-## 6. Google Places field tiers — I got this wrong
+## 6. Google Places — dismissed too fast
 
-The research doc says `websiteUri` sits in the Pro tier at ~5,000 free calls a
-month. Google's Place Details documentation puts **`websiteUri`,
-`nationalPhoneNumber`, `internationalPhoneNumber`, `rating` and the opening-hours
-fields in the Enterprise SKU** — which carries **1,000 free calls/month**, not
-5,000. Pro carries `displayName`; Essentials carries `formattedAddress` and
-`types`. The field mask you send decides the SKU.
+The research doc waved Places off as a "complement" and then cut it from the
+body entirely; it survives only as a link in the sources. That was the wrong
+call — it is the strongest sourcing option available, and it is the one that
+works where OSM doesn't. See [the better plan](#a-replace-osm-with-google-places-text-search-new--the-sourcing-fix).
 
-The correction cuts the free allowance by 5×. It does **not** kill the option —
-see below, where it turns out to be the better answer anyway.
+For the record, since the research doc never pinned the numbers down: Google's
+Place Details documentation puts **`websiteUri`, `nationalPhoneNumber`,
+`internationalPhoneNumber`, `rating` and the opening-hours fields in the
+Enterprise SKU — 1,000 free calls/month.** Pro carries `displayName`;
+Essentials carries `formattedAddress` and `types`. The `X-Goog-FieldMask` you
+send decides which SKU you're billed at, so asking for `websiteUri` puts the
+whole call in the 1,000/month bucket.
 
 ## 7. Business Discovery — upheld, weaker than presented
 
@@ -180,14 +183,14 @@ Same effort, aimed at the half of the funnel that isn't capped.
 
 ### A. Replace OSM with Google Places Text Search (New) — the sourcing fix
 
-This is the option my own SKU error made look worse than it is, and it is
-strictly better than OSM for anywhere OSM is thin:
+The option the research doc dropped. It is strictly better than OSM anywhere
+OSM is thin:
 
 - **Coverage where OSM has none.** Google Maps' India coverage is excellent;
   OSM's Instagram tagging there is 926 objects. This is the difference between
   a dead feature and a working one.
 - **1,000 free Enterprise-mask calls/month — and your DM ceiling is ~300/month.**
-  The quota I mis-stated is still 3× more than you can physically use.
+  The smallest free tier Google offers is still 3× more than you can use.
 - **`websiteUri` is the qualifier, and its *value* is a second one.** Empty →
   no website. But when a small business fills its Google profile's website
   field with `instagram.com/<handle>`, `linktr.ee/…` or a Facebook page — which
