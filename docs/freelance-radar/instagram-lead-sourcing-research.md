@@ -13,6 +13,10 @@ Researched 2026-08-27.
 > `contact:instagram` objects nationwide vs 18,176 in Germany. The review also
 > rejects this document's premise — Instagram caps cold DMs at 5-40/day, so
 > sourcing was never the bottleneck.
+>
+> The current plan of record is
+> [`instagram-outreach-requirements.md`](./instagram-outreach-requirements.md),
+> revised 2026-08-27 against both documents.
 
 ---
 

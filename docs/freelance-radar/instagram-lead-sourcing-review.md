@@ -4,6 +4,9 @@ Companion to `instagram-lead-sourcing-research.md`, written to attack it.
 Reviewed 2026-08-27. Three of its claims do not survive, including the
 headline recommendation.
 
+Its conclusions are folded into the plan of record,
+[`instagram-outreach-requirements.md`](./instagram-outreach-requirements.md).
+
 ---
 
 ## Verdict summary
