@@ -7,7 +7,15 @@ The running state of the build specified in
 When work lands, update this file — not the spec. When the spec is wrong,
 correct the spec and note it in Decisions below.
 
+Related: [`audit-2026-08-28.md`](./audit-2026-08-28.md) — the repo-wide audit of
+false claims and assumption-based code. **Phase A below is its fix plan.**
+
 Last updated: **2026-08-28** · Spec verified: **2026-08-28** · Code written: **none yet**
+
+> **Scope note.** This ledger started as the Instagram plan's tracker. It is now
+> the tracker for lead generation in this repo generally, because the audit
+> found the already-shipped lead source broken and the weekend goal needs a
+> route that is not Instagram. Instagram phases 0–6 are unchanged below.
 
 ## Status key
 
@@ -20,17 +28,25 @@ Last updated: **2026-08-28** · Spec verified: **2026-08-28** · Code written: *
 | # | Phase | Status | Gate to enter | Cost surface |
 |---|---|---|---|---|
 | — | Repo hygiene | `todo` | none | none |
+| **A** | **Discover repair** (audit fix plan) | `todo` | Phase −1 | free |
+| **B** | **Free keyless job feeds** | `todo` | Phase A | free, no signup |
 | 0 | Schema + DM budget setting | `todo` | Phase −1 merged | none |
 | 1 | Paste-and-parse bulk intake | `todo` | Phase 0 | none |
 | 2 | PageSpeed enrichment + auto-scoring | `blocked` | Phase 0; **needs a Google API key** | free, 25k/day |
 | 3 | Prototype-first templates + capped send queue | `blocked` | Phase 1 + 2; **needs Q2/Q3 answered** | none |
-| 4 | Google Places discovery | `todo` | **20-lead field test of phases 1–3 first** | Enterprise SKU, 1k calls/mo free |
+| 4 | Google Places discovery | `todo` | **20-lead field test of phases 1–3 first** | 1k calls/mo free — but **requires a billing card on file** |
 | 5 | Reply-rate tracking per pitch variant | `todo` | Phase 3 has shipped real sends | none |
 | 6 | SERP APIs, Meta Business Discovery, Apify | `todo` | never, realistically | varies |
 | — | OpenStreetMap sourcing | `cut` | — | — |
 
 Phases 1–3 are the minimum viable feature. Everything from 4 on optimises the
 input the spec measured as **abundant** — worth ~2 hours a month, no more.
+
+**Phases A and B now come first.** The repo already ships a lead source; the
+audit found it has never worked. Repairing a built feature beats starting a new
+one, and both A and B produce leads within hours rather than the Instagram
+plan's 3–6 weeks. Phase 4 is the only item anywhere here that needs a card, so
+it sits last regardless of its position in the original spec.
 
 ---
 
@@ -44,14 +60,97 @@ expensive the longer they sit.
 | H1 | Merge `claude/mobile-ui-overhaul-g7iffk` | `todo` | 1 commit, 9 files, no PR. Touches `Leads`/`Outreach`/`Settings`/`LeadForm`/`App` — the exact files phases 0–3 edit. **Do this before phase 0**; the conflict cost only grows. |
 | H2 | Merge this research/spec branch | `todo` | `claude/instagram-outreach-research-vxvtlj`, docs only, zero merge risk |
 | H3 | Fast-forward local `master` | `todo` | Local `master` sits at `1f9c763`, far behind `origin/master` |
-| H4 | `npm install`, confirm `build` + `test` green | `todo` | `node_modules` absent; 34 tests are the pre-existing baseline to protect |
+| H4 | `npm install`, confirm `build` + `test` green | `done` | Done 2026-08-28. `npx tsc -b` exits 0; **37 tests across 6 files pass** — that is the real baseline to protect (the completion report's "34 across 5" is stale, see audit A9) |
+
+---
+
+## Phase A — Discover repair
+
+The fix plan from [`audit-2026-08-28.md`](./audit-2026-08-28.md). The repo
+already ships a lead source; it has never worked, because it calls an endpoint
+that does not exist. Repairing it is a smaller job than any new feature here and
+is the fastest route to real leads in this repo.
+
+| # | Task | Status | Notes |
+|---|---|---|---|
+| A1 | Endpoint `/v1/jobs/search` → `/v1/jobs` | `todo` | **1 line.** Current path 404s with `{"error":"job not found"}` — the router reads `search` as a job handle |
+| A2 | `query` → `q`; drop `posted_within`; add `posted_after` (unix ts) | `todo` | `posted_within` is not a real parameter and is silently ignored today |
+| A3 | `locations.join(", ")`; `posted_at` epoch ms → ISO | `todo` | Real fields are `locations` (array) and an epoch-millisecond integer |
+| A4 | **Get the free key, capture one authenticated response, commit as a fixture** | `blocked` | **Needs the user.** Free, 1,000 credits, signup only — no card. **This is the gate**: keyless responses omit `company_name` and `url`, so leads come out with no company and no link |
+| A5 | Rewrite `jobDataLake.test.ts` to run `normalizeJob()` over that fixture | `todo` | Today's 3 tests never call `normalizeJob` — they check a hand-written fixture, which is why A1–A3 shipped |
+| A6 | Fix the Discover empty-state copy | `todo` | The key buys *usable fields*, not access. Current copy states the wrong reason |
+| A7 | Scope the completion report; correct 34/5 → 37/6 | `todo` | Report predates Discover by 16 days |
+| A8 | Mark the `blockers.md` CORS entry resolved | `todo` | Measured: `access-control-allow-origin: *`, and `X-API-Key` explicitly allowed. No proxy, ever |
+| A9 | Note the Places billing-card requirement wherever phase 4 is called free | `todo` | Also fixed in the summary table above |
+| A10 | Drop or annotate the Discover-caching backlog item | `todo` | 500 calls/day keyless + 1,000 signup credits — the constraint it guards against does not exist |
+| A11 | Note in `requirements.md` that a keyless tier exists | `todo` | Makes the key requirement read as deliberate |
+
+**Done when:** a Discover search returns rows whose leads carry a real company
+name, a working apply link, a real location and a real date — and reverting
+A1–A3 turns the test suite red.
+
+---
+
+## Phase B — Free keyless job feeds
+
+Quality over quantity, no signup, no key, no card. All four verified
+browser-callable on 2026-08-28 — the CORS header is quoted because that is the
+only thing that decides whether this SPA can call them without a proxy.
+
+| Source | CORS header | Volume | Quality |
+|---|---|---|---|
+| **HN "Freelancer? Seeking freelancer?"** (Algolia API) | echoes `Origin` | ~5–10 real hiring posts/mo | **Highest** — people hiring freelancers directly, no platform cut |
+| RemoteOK | `*` | 100/request | Medium |
+| Remotive | `*` | Good | Medium |
+| Arbeitnow | `*` | Good | Medium |
+
+| # | Task | Status | Notes |
+|---|---|---|---|
+| B1 | `src/lib/jobFeeds.ts` — one normaliser per source into the existing job shape | `todo` | RemoteOK's fields (`position`, `company`, `apply_url`, `salary_min/max`, `tags`, `location`, `date`) map nearly 1:1; this is small |
+| B2 | Source dropdown on `Discover.tsx` | `todo` | Reuse the existing search-params → results → *Add lead* shape. No new page |
+| B3 | Reuse `jobToLeadDraft` for all sources | `todo` | Set `source` per feed so leads stay attributable |
+| B4 | HN thread parser (Algolia `search_by_date`, top-level comments) | `todo` | Highest-value, most work — comments are freeform text, not structured fields |
+| B5 | One test per normaliser over a committed real response | `todo` | Same rule as A5. **No hand-written fixtures** |
+
+**Why this exists:** it removes the single-vendor dependency the audit exposed,
+costs nothing, needs no signup, and keeps working if JobDataLake's free tier
+changes.
+
+**HN detail:** the thread runs monthly, posted on the 1st. August 2026 is HN id
+`49157021`. Volume is genuinely small — 15–33 comments a month, of which maybe a
+third are hiring rather than seeking. That is the trade being made deliberately:
+a handful of high-intent posts beats thousands of ATS listings.
+
+---
+
+## Getting a gig this weekend — no code
+
+Recorded because it is the actual goal, and because **no phase in this ledger
+can deliver it.** The Instagram plan is a 3–6 week machine: days of coding, then
+10 DMs/day at ~3% reply, then call → proposal → invoice. Phases A and B produce
+leads in hours, but a lead is not a signed gig.
+
+The weekend route is manual and starts now:
+
+| # | Action | Status |
+|---|---|---|
+| W1 | Apply in the live HN thread (id `49157021`) | `todo` |
+| W2 | Upwork / Contra / r/forhire — direct applications | `todo` |
+| W3 | Sign up for the free JobDataLake key | `todo` | Doubles as A4's unblock — 10 minutes, no card |
+
+Building lead-generation software is not the path to a gig this weekend. W1–W3
+are. Phase A is worth doing *after*, because it makes the following weeks
+cheaper — not this one.
 
 ---
 
 ## Phase 0 — Schema and settings
 
 Additive only. No existing type changes shape, so nothing here can break the
-34 passing tests.
+37 passing tests. Verified: `db.ts` pins `DB_VERSION = 1` and only creates
+stores when absent — IndexedDB holds plain objects with no enforced schema, so
+new optional fields read `undefined` on existing records. **No migration
+needed.**
 
 | # | Task | Status | Notes |
 |---|---|---|---|
@@ -180,6 +279,7 @@ Ordered by what they hold up. Q1 is settled; the rest need the user.
 | Q3 | Sales tips — fixed rotating library, or written per lead? | 3.1, 3.2 | Per lead. A library is a content project pretending to be a code task |
 | Q4 | Starting daily DM cap | 0.6 | **10.** Instagram publishes no limits; vendor sources bracket a new account at 10–20 cold/day |
 | Q5 | Google PSI API key | All of phase 2 | None — genuinely blocking |
+| Q6 | **JobDataLake free API key** (signup, no card) | A4, and therefore all of phase A | None — genuinely blocking. Also the cheapest unblock on this page |
 
 ---
 
@@ -187,6 +287,25 @@ Ordered by what they hold up. Q1 is settled; the rest need the user.
 
 Append-only. Newest first.
 
+- **2026-08-28 — Discover has never worked.** `searchJobs()` calls
+  `/v1/jobs/search`, which 404s; the real endpoint is `/v1/jobs`. Not caught
+  because the repo's only verification pass (2026-08-10) predates the feature
+  (2026-08-26) by 16 days, and because the feature's three tests never call the
+  function that touches the API. Full evidence in
+  [`audit-2026-08-28.md`](./audit-2026-08-28.md). Became phase A.
+- **2026-08-28 — no hand-written fixtures for external APIs, ever again.** The
+  root cause of the above: `jobDataLake.test.ts` asserts against an invented
+  object, so three green tests could not fail for any of the reasons the
+  integration was broken. Every external-API normaliser from here on is tested
+  against a committed real response (A5, B5, 2.1).
+- **2026-08-28 — lead generation is no longer Instagram-only.** Phases A and B
+  produce leads in hours and cost nothing; the Instagram plan is a 3–6 week
+  machine. Both now precede phase 0. The Instagram phases are unchanged, just
+  no longer first.
+- **2026-08-28 — Places phase 4 needs a billing card.** Free on usage at this
+  volume, but Google Maps Platform will not issue a key without a card on file.
+  It is the only item in this ledger with that requirement, which is enough on
+  its own to keep it last.
 - **2026-08-28 — `ig.me` does not work on desktop.** Meta's own docs say ig.me
   links are "not supported on Instagram Web"; on desktop the link degrades to a
   profile visit with no composer. Phase 3 now opens the profile, treats
