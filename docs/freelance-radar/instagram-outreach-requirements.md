@@ -69,44 +69,86 @@ pitched leads") aimed at the abundant half of the funnel.
 
 ---
 
-## Sourcing decision, and the open geography question
+## Market selection (resolved 2026-08-27)
 
-The research doc's headline recommendation (OpenStreetMap via Overpass) was
-rejected on measurement. Per Geofabrik's regional taginfo extracts, objects
-tagged `contact:instagram`:
+No specific city was fixed; the market is a free variable, with an interest in
+tourist and remote destinations at better pricing. Measured, that resolves
+three things at once.
 
-| Region | Count |
-|---|---|
-| United States | 25,895 |
-| Germany | 18,176 |
-| **India** | **926** |
+### OpenStreetMap is out of the plan entirely
 
-India has **163,127** objects tagged `shop` in OSM — the shops are mapped, the
-handles are not. A **0.57%** tagging rate is not a pipeline. Public Overpass
-also returned HTTP 503 or timed out on every attempt across three mirrors and
-two network paths, so the "keyless, CORS, no backend needed" advantage is
-weaker than it looked.
+The research doc's top pick dies here. Objects tagged `contact:instagram`, per
+Geofabrik regional taginfo:
 
-**Decision: discovery is Google Places Text Search (New), not OSM.**
+| Region | Count | | Region | Count |
+|---|---|---|---|---|
+| United States | 25,895 | | Portugal | 6,419 |
+| Germany | 18,176 | | Spain | 5,144 |
+| Austria | 1,273 | | Indonesia (Bali) | 1,255 |
+| India | **926** | | Croatia | 778 |
+| | | | Greece | **624** |
 
-- Works where OSM doesn't — Google Maps' India coverage is good.
-- `websiteUri` empty → no website. `websiteUri` containing `instagram.com`,
-  `linktr.ee` or a Facebook page → **no real website *and* the handle, from an
-  official API, in one call.** This is what the research doc was reaching for
-  by four indirect routes.
-- `websiteUri` is the **Enterprise SKU: 1,000 free calls/month** (Pro carries
-  `displayName`; Essentials carries `formattedAddress`, `types`; the
-  `X-Goog-FieldMask` decides the SKU). 1,000/month is ~3× the DM ceiling, so
-  the smallest free tier Google offers is more than can be used.
-- Official and paid-tier. No scraping question at all.
+**OSM's Instagram density tracks mapper culture, not tourism or business
+density.** Germany is an outlier; every classic tourist market — Greece,
+Croatia, Bali, even alpine Austria — is at or near India's level. "Target
+tourist destinations" and "source from OSM" are mutually exclusive strategies,
+so OSM is removed from the build order rather than deferred. Public Overpass
+also 503'd on every attempt across three mirrors.
 
-> **⚠️ Open, and it gates phase 3 only: what is the target city?**
-> Nothing in phases 0–2 depends on it. But if the target market is in Europe or
-> the US, OSM is viable and worth keeping as a free second source; if it is
-> India, OSM leaves the plan entirely. **Run one Places Text Search for the
-> target city with `places.websiteUri` in the field mask and count how many of
-> 20 results have an empty or social-link website before building phase 3.**
-> That test is the OSM mistake not repeated.
+**Google Places Text Search is the sole discovery source, in every market.**
+It has no such geography problem, and `websiteUri` is both the qualifier and,
+frequently, the handle (see below).
+
+### The market decision is set by outreach law, not by data
+
+The instinct to chase better pricing points at Europe. The law points the other
+way, and for this ICP specifically:
+
+| | European Union / UK | United States |
+|---|---|---|
+| Regime | GDPR + ePrivacy Art. 13; ePrivacy wins where they overlap | CAN-SPAM |
+| Model | **Opt-in** for individuals | **Opt-out** |
+| B2B carve-out | Legitimate interest (Art. 6(1)(f)) covers **corporate subscribers** — Ltd, LLP | Not needed; unsolicited commercial email is lawful with disclosure + opt-out |
+| **Sole traders** | Count as **individuals** — consent required. Germany's UWG requires prior consent even B2B; Austria is stricter still | Same as any business |
+| Exposure | Up to €20M or 4% of global turnover | Up to ~$53,088 per email |
+
+**The ICP is the worst-served category under EU law.** A one-owner guesthouse,
+café or dive shop is a sole trader, so it falls on the consent side of
+ePrivacy, not the legitimate-interest side. Note also that GDPR governs
+*building the list* about EU individuals regardless of channel — so DM-only
+outreach does not route around it.
+
+**Decision: target the United States first.** Highest pricing, permissive
+outreach law, English, excellent Places coverage, and — validating the "remote
+places" instinct — resort and gateway towns have few local web agencies
+competing for the work. Europe is a later phase, entered only with a
+documented Legitimate Interest Assessment, an opt-out line in every message,
+and Germany and Austria excluded.
+
+### The ICP and the pitch that follows from it
+
+Tourist-town **accommodation and hospitality** — lodging, B&B, guesthouse, tour
+operator, dive shop, resort-town restaurant — because those businesses have a
+quantifiable, recurring cost that a website removes:
+
+- Booking.com commission runs **10–25%, averaging ~15%**, commonly **18–22%**
+  with visibility programmes, plus **1.1–3.1%** payment processing.
+- Airbnb moved to a host-only model at a flat **15.5%**.
+- For small independent properties the rate is **non-negotiable** — negotiated
+  terms start around 50+ rooms.
+
+A property turning $80,000/year through OTAs pays roughly **$12,000–17,000/year
+in commission**. Shifting even a tenth of those bookings direct pays for the
+site several times over in one season.
+
+That is a pitch made of the prospect's own money, and it outranks the Lighthouse
+argument for this segment. It is also **self-qualifying from Places alone**: for
+a lodging business, a `websiteUri` that is empty, or points at a Booking.com or
+Airbnb listing, or at Instagram or Linktree, *is* the qualification — no
+enrichment call needed.
+
+PageSpeed stays as the pitch for every other segment, and as the secondary
+argument for hospitality businesses that do have a site.
 
 ---
 
@@ -207,7 +249,8 @@ computed on import, so scoring stops being hand-entered.
 
 ## Open questions
 
-1. **Target city / market.** Gates phase 3 only (Places vs. OSM). See above.
+1. ~~Target city / market.~~ **Resolved above:** United States first,
+   tourist-town hospitality, Google Places as the only discovery source.
 2. How is the prototype generated — by hand, or from the lead's own Instagram
    photos and bio? Affects whether phase 2 needs a generation step or just a
    `prototypeUrl` field. *(The field is specified either way.)*
@@ -217,7 +260,8 @@ computed on import, so scoring stops being hand-entered.
    account; confirm the account's age and history before setting it higher.
 
 Resolved since 2026-08-26: the prototype asset is **per-lead** (`prototypeUrl`),
-not a generic template link.
+not a generic template link. Resolved 2026-08-27: the target market, the
+discovery source, and the primary pitch — see above.
 
 ---
 
@@ -228,10 +272,10 @@ not a generic template link.
 | 0 | `instagramHandle`, `prototypeUrl`, `psi*` fields; daily-DM-budget setting | Everything else needs somewhere to land |
 | 1 | Paste-and-parse bulk intake | Cheapest item in either document; ~300 leads/month is easy to source by hand and this makes it fast |
 | 2 | PageSpeed Insights enrichment + auto-scoring | Free and effectively unlimited; turns an opinion pitch into evidence and widens the ICP |
-| 3 | Prototype-first template + DM-aware send queue with hard cap | Aims squarely at the capped stage |
-| 4 | Google Places discovery tab — **after** the 20-result field test | Replaces OSM; works where OSM doesn't; often hands over the handle |
+| 3 | Prototype-first templates (OTA-commission variant for hospitality, PSI variant for the rest) + DM-aware send queue with hard cap | Aims squarely at the capped stage |
+| 4 | Google Places discovery tab (US tourist-town lodging + hospitality first) — **after** the 20-result field test | Sole discovery source; for lodging, `websiteUri` alone qualifies the lead and often hands over the handle |
 | 5 | Reply-rate tracking per pitch variant | The only metric that can multiply results |
-| 6 | Everything else — SERP APIs, Meta Business Discovery, Apify, OSM if the market is European | Each saves ≤2 hours/month. Last, or never. |
+| 6 | Everything else — SERP APIs, Meta Business Discovery, Apify | Each saves ≤2 hours/month. Last, or never. **OSM is cut, not deferred** — see market selection. |
 
 Phases 1–3 are the minimum viable feature. Phase 4 onward is optimisation of
 the abundant input.
@@ -243,7 +287,9 @@ the abundant input.
 - Instagram DM limits — [flowgent](https://flowgent.ai/blog/instagram-dm-limits-how-many-messages-you-can-send-daily) · [Wave: safe numbers to avoid bans](https://www.usewave.co/blog/instagram-dm-limits) · [Metricool: Instagram limits](https://metricool.com/instagram-limits/)
 - Reply-rate benchmarks — [Cleanlist: 3.1% cold email response rate](https://www.cleanlist.ai/blog/2026-02-18-cold-email-response-rate-statistics) · [Instantly 2026 benchmark report](https://instantly.ai/cold-email-benchmark-report-2026)
 - Meta v. Bright Data — [Bright Data: Meta dismisses claim](https://brightdata.com/blog/general/meta-dismisses-claim-against-bright-data) · [Eric Goldman's Technology & Marketing Law Blog](https://blog.ericgoldman.org/archives/2024/01/game-on-bright-data-scores-major-victory-in-web-scraping-dispute-with-meta-guest-blog-post.htm) · [Farella Braun + Martel](https://www.fbm.com/publications/major-decision-affects-law-of-scraping-and-online-data-collection-meta-platforms-v-bright-data/)
-- OSM coverage — [taginfo India](https://taginfo.geofabrik.de/asia:india/keys/contact%3Ainstagram) · [Germany](https://taginfo.geofabrik.de/europe:germany/keys/contact%3Ainstagram) · [US](https://taginfo.geofabrik.de/north-america:us/keys/contact%3Ainstagram)
+- OSM coverage by region — taginfo: [US](https://taginfo.geofabrik.de/north-america:us/keys/contact%3Ainstagram) · [Germany](https://taginfo.geofabrik.de/europe:germany/keys/contact%3Ainstagram) · [Portugal](https://taginfo.geofabrik.de/europe:portugal/keys/contact%3Ainstagram) · [Spain](https://taginfo.geofabrik.de/europe:spain/keys/contact%3Ainstagram) · [Austria](https://taginfo.geofabrik.de/europe:austria/keys/contact%3Ainstagram) · [Indonesia](https://taginfo.geofabrik.de/asia:indonesia/keys/contact%3Ainstagram) · [India](https://taginfo.geofabrik.de/asia:india/keys/contact%3Ainstagram) · [Croatia](https://taginfo.geofabrik.de/europe:croatia/keys/contact%3Ainstagram) · [Greece](https://taginfo.geofabrik.de/europe:greece/keys/contact%3Ainstagram)
+- Outreach law — [GDPR legitimate interest for B2B cold email](https://salesforceeurope.com/blog/what-is-legitimate-interest-for-gdpr-cold-email-b2b-rules) · [GDPR cold email rules 2026](https://prospeo.io/s/gdpr-cold-email) · [UK PECR: corporate subscribers vs sole traders](https://leadistry.co.uk/blog/cold-email-uk-gdpr-legitimate-interest) · [GDPR vs CAN-SPAM compliance](https://instantly.ai/blog/b2b-email-list-compliance-gdpr-canspam/) · [cold email legal guide 2026](https://overloop.com/blog/cold-email-illegal)
+- OTA commission — [Booking.com commission guide 2026](https://rield-rm.com/en/booking-com-commission-guide/) · [what hotels really pay](https://kimisuite.com/en/blog/booking-com-commissions-explained) · [Booking.com fees for hosts](https://www.houst.com/blog/booking-com-fees-for-hosts) · [Guesty breakdown](https://www.guesty.com/blog/how-much-does-booking-com-charge-hosts/)
 - Google Places — [Place Details (New)](https://developers.google.com/maps/documentation/places/web-service/place-details) · [Place Data Fields (New)](https://developers.google.com/maps/documentation/places/web-service/data-fields) · [Text Search (New)](https://developers.google.com/maps/documentation/places/web-service/text-search) · [usage and billing](https://developers.google.com/maps/documentation/places/web-service/usage-and-billing)
 - PageSpeed Insights — [API limits](https://groups.google.com/g/pagespeed-insights-discuss/c/dB7hWmGAGsw) · [Unlighthouse PSI API guide](https://unlighthouse.dev/learn-lighthouse/pagespeed-insights-api)
 - Instagram DM deep links — [respond.io ig.me guide](https://respond.io/blog/instagram-direct-message-link) · [CreatorFlow ig.me guide](https://creatorflow.so/blog/ig-me-link-guide/)
