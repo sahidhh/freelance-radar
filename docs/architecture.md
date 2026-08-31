@@ -29,6 +29,9 @@ freelance-radar/
       outreachTemplate.ts      builds draft subject/body from a Lead
       nextAction.ts            status -> next action label (single source of truth)
       mailto.ts                builds mailto: URL from outreach draft
+      jobDataLake.ts           JobDataLake search + JobListing shape + jobToLeadDraft
+      jobFeeds.ts              keyless feed normalisers (RemoteOK/Remotive/Arbeitnow)
+      __fixtures__/            captured real API responses the feed tests assert against
     components/
       ui/                     shadcn primitives (button, input, select, badge, table, ...)
       StatusBadge.tsx
@@ -37,6 +40,7 @@ freelance-radar/
       KanbanColumn.tsx
     pages/
       Dashboard.tsx
+      Discover.tsx            multi-source job search -> Add as Lead
       Leads.tsx
       LeadDetail.tsx
       LeadForm.tsx            add/edit

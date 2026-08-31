@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
-import { jobToLeadDraft, type JobDataLakeJob } from "./jobDataLake"
+import { jobToLeadDraft, type JobListing } from "./jobDataLake"
 
-function makeJob(overrides: Partial<JobDataLakeJob> = {}): JobDataLakeJob {
+function makeJob(overrides: Partial<JobListing> = {}): JobListing {
   return {
     id: "acme-senior-engineer-abc12",
     title: "Senior Engineer",

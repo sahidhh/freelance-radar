@@ -2,6 +2,14 @@
 
 Autonomous implementation pass, phases 1–10 per `docs/freelance-radar/implementation-plan.md`, executed end to end with no human input. Model: Sonnet, high reasoning effort.
 
+> **Scope: phases 1–10 only, as of 2026-08-10.** Everything below — including
+> "live browser verification after every phase" and "zero page errors" — covers
+> that pass and nothing after it. It does **not** cover Discover, which landed
+> 16 days later on 2026-08-26 and was broken from its first commit (see
+> [`audit-2026-08-28.md`](./audit-2026-08-28.md)). The test counts here are the
+> counts of that day; the current suite is **54 tests across 7 files**. Do not
+> read this report as verification of any later feature.
+
 ## Implemented
 
 All 8 screens, all 4 entities, and the full workflow in the Definition of Done are built and working against real IndexedDB storage:
