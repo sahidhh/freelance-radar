@@ -19,7 +19,7 @@ Last updated: **2026-08-28** · Spec verified: **2026-08-28** · Code written: *
 
 ## Status key
 
-`todo` · `wip` · `done` · `blocked` (needs an answer or an input) · `cut` (decided against, kept for the record)
+`todo` · `wip` · `done` · `blocked` (needs an answer or an input) · `paused` (deliberately set aside, resumable) · `cut` (decided against, kept for the record)
 
 ---
 
@@ -28,8 +28,8 @@ Last updated: **2026-08-28** · Spec verified: **2026-08-28** · Code written: *
 | # | Phase | Status | Gate to enter | Cost surface |
 |---|---|---|---|---|
 | — | Repo hygiene | `todo` | none | none |
-| **A** | **Discover repair** (audit fix plan) | `todo` | Phase −1 | free |
-| **B** | **Free keyless job feeds** | `todo` | Phase A | free, no signup |
+| **A** | **Discover / JobDataLake repair** (audit fix plan) | `paused` | — | free |
+| **B** | **Free keyless job feeds** | `todo` | Phase −1 | free, no signup |
 | 0 | Schema + DM budget setting | `todo` | Phase −1 merged | none |
 | 1 | Paste-and-parse bulk intake | `todo` | Phase 0 | none |
 | 2 | PageSpeed enrichment + auto-scoring | `blocked` | Phase 0; **needs a Google API key** | free, 25k/day |
@@ -42,11 +42,18 @@ Last updated: **2026-08-28** · Spec verified: **2026-08-28** · Code written: *
 Phases 1–3 are the minimum viable feature. Everything from 4 on optimises the
 input the spec measured as **abundant** — worth ~2 hours a month, no more.
 
-**Phases A and B now come first.** The repo already ships a lead source; the
-audit found it has never worked. Repairing a built feature beats starting a new
-one, and both A and B produce leads within hours rather than the Instagram
-plan's 3–6 weeks. Phase 4 is the only item anywhere here that needs a card, so
-it sits last regardless of its position in the original spec.
+**Phase B comes first.** It produces leads within hours, needs no key, no
+signup and no card, and does not wait on anything. The Instagram plan is a 3–6
+week machine by comparison. Phase 4 is the only item anywhere here that needs a
+card, so it sits last regardless of its position in the original spec.
+
+**Phase A is paused (2026-08-28, user decision).** Its blocker was a
+JobDataLake key, and the feature is not worth the signup while phase B covers
+the same need for free. **Note what pausing does not do: Discover remains
+broken and still 404s.** That is tolerable on a single-user tool, but "paused"
+must not later be misread as "fixed". A1 alone is a one-line fix if the 404
+becomes annoying — it will not make the feature *useful* without a key, which is
+why the whole phase is parked rather than half-done.
 
 ---
 
@@ -114,7 +121,8 @@ only thing that decides whether this SPA can call them without a proxy.
 
 **Why this exists:** it removes the single-vendor dependency the audit exposed,
 costs nothing, needs no signup, and keeps working if JobDataLake's free tier
-changes.
+changes. **With phase A paused, this is the lead source — not a backup.**
+B1–B3 need no input from anyone and can start immediately.
 
 **HN detail:** the thread runs monthly, posted on the 1st. August 2026 is HN id
 `49157021`. Volume is genuinely small — 15–33 comments a month, of which maybe a
@@ -279,7 +287,7 @@ Ordered by what they hold up. Q1 is settled; the rest need the user.
 | Q3 | Sales tips — fixed rotating library, or written per lead? | 3.1, 3.2 | Per lead. A library is a content project pretending to be a code task |
 | Q4 | Starting daily DM cap | 0.6 | **10.** Instagram publishes no limits; vendor sources bracket a new account at 10–20 cold/day |
 | Q5 | Google PSI API key | All of phase 2 | None — genuinely blocking |
-| Q6 | **JobDataLake free API key** (signup, no card) | A4, and therefore all of phase A | None — genuinely blocking. Also the cheapest unblock on this page |
+| ~~Q6~~ | ~~JobDataLake free API key~~ | — | **Withdrawn 2026-08-28.** Phase A is paused, so nothing waits on this |
 
 ---
 
@@ -287,6 +295,11 @@ Ordered by what they hold up. Q1 is settled; the rest need the user.
 
 Append-only. Newest first.
 
+- **2026-08-28 — Phase A paused; phase B promoted to primary.** The JobDataLake
+  repair is parked rather than half-finished: its gate was a signup key, and the
+  free keyless feeds in phase B cover the same need with no key, no signup and
+  no card. Q6 withdrawn. Consequence carried forward deliberately: **Discover
+  still 404s and will keep 404ing.**
 - **2026-08-28 — Discover has never worked.** `searchJobs()` calls
   `/v1/jobs/search`, which 404s; the real endpoint is `/v1/jobs`. Not caught
   because the repo's only verification pass (2026-08-10) predates the feature
