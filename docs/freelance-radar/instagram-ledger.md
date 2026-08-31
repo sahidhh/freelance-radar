@@ -31,6 +31,7 @@ Last updated: **2026-08-31** · Spec verified: **2026-08-28** · Code written: *
 | **A** | **Discover / JobDataLake repair** (audit fix plan) | `paused` | — | free |
 | — | Audit doc fixes (A6–A8, A10, A11) | `done` | — | none |
 | **B** | **Free keyless job feeds** | `done` | — | free, no signup |
+| **C** | **Gig sources** (Freelancer.com, Jobicy) | `todo` | none | free, no signup |
 | 0 | Schema + DM budget setting | `todo` | Phase −1 merged | none |
 | 1 | Paste-and-parse bulk intake | `todo` | Phase 0 | none |
 | 2 | PageSpeed enrichment + auto-scoring | `blocked` | Phase 0; **needs a Google API key** | free, 25k/day |
@@ -198,6 +199,89 @@ cheaper — not this one.
 
 ---
 
+## Phase C — Gig sources
+
+**Why this exists:** phase B shipped three job boards, and the user's first real
+use of them found what the boards actually contain. Measured 2026-08-31 on live
+responses:
+
+| Source | Rows/request | Freelance, contract or part-time | Verdict |
+|---|---|---|---|
+| **RemoteOK** (the default) | 100 | **0** | Full-time board. No `contract` tag exists on any row |
+| Remotive | 19 | 7 | The **entire** free API is 19 rows — `total-job-count: 19`. `?search=` is ignored |
+| Arbeitnow | 175 | 6 | German full-time; 46 "Full Time" vs 3 "Contract", 3 "Part time" |
+
+**13 gig-shaped rows out of 294, and the default source contributes none of
+them.** Phase B solved "no lead source at all". It did not solve "leads I can
+actually bid on", because every source it added is an employment board. Gig
+marketplaces are a different kind of site and none of them were tested.
+
+### Candidates, all probed live on 2026-08-31
+
+CORS is quoted first because it is still the only thing that decides whether
+this SPA can call a source without a proxy — and the no-proxy rule has not
+changed.
+
+| Candidate | CORS | Result |
+|---|---|---|
+| **Freelancer.com** `/api/projects/0.1/projects/active/` | `*` | **200, no auth, no key.** 100 projects/request, *all* of them gigs |
+| **Jobicy** `/api/v2/remote-jobs?tag=freelance` | `*` | **200.** 45 rows, 11 explicitly Part-Time/Contract, rest titled "Freelance …" |
+| Himalayas `/jobs/api` | **none** | 200 but unusable — would need the proxy this app does not have |
+| WorkingNomads `/api/exposed_jobs/` | **none** | Same |
+| Codeur.com `/projects.rss` | **none** | Same (and French-market) |
+| Reddit `r/forhire/new.json` | — | **403 from here.** May work from a browser origin; unverified, so not planned |
+| WeWorkRemotely contract RSS | — | 403 |
+| freelancermap RSS · PeoplePerHour RSS | — | 404, both |
+| RemoteOK `?tags=contract` | — | 302 to HTML. No server-side filter exists |
+
+### Freelancer.com is the one that changes the answer
+
+Verified against a live response, not documentation:
+
+- **Every row is a gig**, not a job — 83 fixed-price, 17 hourly out of 100.
+- **Server-side search works**: `?query=react` returns 20 matching projects, so
+  the keyword box stops being a client-side filter over whatever the board
+  happened to send.
+- **Real budgets**: `budget.minimum`/`maximum` plus a currency, e.g. `250-750
+  USD`, `2-8 USD` hourly. This is the first source in the repo that can populate
+  `estimatedValueMin`/`Max` with a number that means something.
+- **`jobs[]` carries real skills** (`React.js`, `Node.js`, `Website Design`).
+- **`bid_stats.bid_count` says how crowded a project already is** — one sample
+  had 55 bids. That is a qualifier no other source offers.
+- Project URL is `https://www.freelancer.com/projects/{seo_url}` — confirmed 200.
+
+**Say the downside plainly:** it is a bid marketplace. 55 bids on one project is
+a race to the bottom, and the currency mix skews low (32 of 100 INR, 39 USD).
+The volume is real; the win rate will not be. It suits "find something to bid on
+this week", not "find a client worth keeping".
+
+| # | Task | Status | Notes |
+|---|---|---|---|
+| C0 | **Read Freelancer.com's API terms before writing any code** | `todo` | **The gate.** The endpoint answers with no key and no auth, which is not the same as being licensed for this use. If the terms forbid it, phase C is Jobicy only and the rest of this table is cut |
+| C1 | `freelancerProjects.ts` — normalise a project into a lead draft | `todo` | Not into `JobListing`: a project has a budget range, a bid count and no company, so forcing it through the job shape loses all three |
+| C2 | Currency rule: map `estimatedValue` **only when the budget is USD** | `todo` | `Lead` has no currency field, and mixing INR 37,500 with USD 250 makes the Pipeline total meaningless. Always write `Budget: 37500-75000 INR` into `notes` regardless |
+| C3 | Bid count and submit date into `notes`, newest first | `todo` | A project with 55 bids is already lost. Surfacing it is what makes the list triageable |
+| C4 | Source dropdown entry; pass the keyword to `query=` server-side | `todo` | First source with a real search — do not filter it client-side like the boards |
+| C5 | Jobicy as a second entry, pinned to `?tag=freelance` | `todo` | Structured `jobType`, keyless, CORS `*`. Smaller job than C1 |
+| C6 | Make a gig source the default; demote RemoteOK | `todo` | Shipping a default that measured 0/100 on the thing the user wants is the actual defect here |
+| C7 | Tests per normaliser over committed real responses | `todo` | Same rule as A5/B5. **No hand-written fixtures** |
+
+**Done when:** the default Discover search returns projects with a real budget
+and a bid count, and adding one produces a lead whose estimated value is either
+a real USD number or empty — never a number in a currency nobody recorded.
+
+### What no source fixes
+
+Phase C buys a bigger pile of things to bid on. It does not change the win rate,
+and on a bid marketplace the win rate is the whole problem — 55 competitors is
+the norm, not the outlier. The lever that pays is upstream of every source in
+this ledger: **being the only bidder**, which is what the Instagram/Places plan
+was always about and what phase 5's reply-rate tracking exists to measure. Build
+phase C because it makes the tool honest about what it is for; do not expect it
+to produce a client.
+
+---
+
 ## Phase 0 — Schema and settings
 
 Additive only. No existing type changes shape, so nothing here can break the
@@ -340,6 +424,13 @@ Ordered by what they hold up. Q1 is settled; the rest need the user.
 ## Decisions and corrections
 
 Append-only. Newest first.
+
+- **2026-08-31 — the phase B feeds are employment boards, not gig boards.**
+  Measured: 13 freelance/contract/part-time rows out of 294 across the three,
+  and RemoteOK — the default — contributes **0 of 100**. Remotive's entire free
+  API is 19 rows. Phase C is the fix, and Freelancer.com's public project API is
+  its centre: keyless, CORS `*`, 100 gigs per request with real budgets and bid
+  counts. Gated on reading their API terms first (C0).
 
 - **2026-08-31 — phase B verified end to end in a browser, two defects fixed.**
   Source changes now clear the result list (a stale row would have been filed
