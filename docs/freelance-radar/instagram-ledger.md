@@ -10,7 +10,7 @@ correct the spec and note it in Decisions below.
 Related: [`audit-2026-08-28.md`](./audit-2026-08-28.md) — the repo-wide audit of
 false claims and assumption-based code. **Phase A below is its fix plan.**
 
-Last updated: **2026-08-28** · Spec verified: **2026-08-28** · Code written: **none yet**
+Last updated: **2026-08-31** · Spec verified: **2026-08-28** · Code written: **phase B**
 
 > **Scope note.** This ledger started as the Instagram plan's tracker. It is now
 > the tracker for lead generation in this repo generally, because the audit
@@ -29,7 +29,8 @@ Last updated: **2026-08-28** · Spec verified: **2026-08-28** · Code written: *
 |---|---|---|---|---|
 | — | Repo hygiene | `todo` | none | none |
 | **A** | **Discover / JobDataLake repair** (audit fix plan) | `paused` | — | free |
-| **B** | **Free keyless job feeds** | `todo` | Phase −1 | free, no signup |
+| — | Audit doc fixes (A6–A8, A10, A11) | `done` | — | none |
+| **B** | **Free keyless job feeds** | `done` | — | free, no signup |
 | 0 | Schema + DM budget setting | `todo` | Phase −1 merged | none |
 | 1 | Paste-and-parse bulk intake | `todo` | Phase 0 | none |
 | 2 | PageSpeed enrichment + auto-scoring | `blocked` | Phase 0; **needs a Google API key** | free, 25k/day |
@@ -85,12 +86,12 @@ is the fastest route to real leads in this repo.
 | A3 | `locations.join(", ")`; `posted_at` epoch ms → ISO | `todo` | Real fields are `locations` (array) and an epoch-millisecond integer |
 | A4 | **Get the free key, capture one authenticated response, commit as a fixture** | `blocked` | **Needs the user.** Free, 1,000 credits, signup only — no card. **This is the gate**: keyless responses omit `company_name` and `url`, so leads come out with no company and no link |
 | A5 | Rewrite `jobDataLake.test.ts` to run `normalizeJob()` over that fixture | `todo` | Today's 3 tests never call `normalizeJob` — they check a hand-written fixture, which is why A1–A3 shipped |
-| A6 | Fix the Discover empty-state copy | `todo` | The key buys *usable fields*, not access. Current copy states the wrong reason |
-| A7 | Scope the completion report; correct 34/5 → 37/6 | `todo` | Report predates Discover by 16 days |
-| A8 | Mark the `blockers.md` CORS entry resolved | `todo` | Measured: `access-control-allow-origin: *`, and `X-API-Key` explicitly allowed. No proxy, ever |
+| A6 | Fix the Discover empty-state copy | `done` | 2026-08-31. Now an inline notice (not a full-page block) stating the key buys *usable fields*, not access |
+| A7 | Scope the completion report; correct the stale test count | `done` | 2026-08-31. Header note scopes it to phases 1–10 as of 2026-08-10 and points at the audit; current count stated as 54/7 |
+| A8 | Mark the `blockers.md` CORS entry resolved | `done` | 2026-08-31. Both Discover entries in `blockers.md` now carry their measured outcome |
 | A9 | Note the Places billing-card requirement wherever phase 4 is called free | `todo` | Also fixed in the summary table above |
-| A10 | Drop or annotate the Discover-caching backlog item | `todo` | 500 calls/day keyless + 1,000 signup credits — the constraint it guards against does not exist |
-| A11 | Note in `requirements.md` that a keyless tier exists | `todo` | Makes the key requirement read as deliberate |
+| A10 | Drop or annotate the Discover-caching backlog item | `done` | 2026-08-31. Dropped in `backlog.md`; the pagination and CORS-proxy items were corrected in the same pass |
+| A11 | Note in `requirements.md` that a keyless tier exists | `done` | 2026-08-31. Amendment 2026-08-31 states it: the keyless tier answers but omits `company_name` and `url` |
 
 **Done when:** a Discover search returns rows whose leads carry a real company
 name, a working apply link, a real location and a real date — and reverting
@@ -106,28 +107,73 @@ only thing that decides whether this SPA can call them without a proxy.
 
 | Source | CORS header | Volume | Quality |
 |---|---|---|---|
-| **HN "Freelancer? Seeking freelancer?"** (Algolia API) | echoes `Origin` | ~5–10 real hiring posts/mo | **Highest** — people hiring freelancers directly, no platform cut |
-| RemoteOK | `*` | 100/request | Medium |
-| Remotive | `*` | Good | Medium |
-| Arbeitnow | `*` | Good | Medium |
+| RemoteOK | `*` | 101/request, whole board | Medium |
+| Remotive | `*` | ~19/request | Medium |
+| Arbeitnow | `*` | 175/page | Medium |
+| ~~HN "Freelancer? Seeking freelancer?"~~ | echoes `Origin` | **0.3 hiring posts/mo (measured)** | `cut` — see B4 |
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| B1 | `src/lib/jobFeeds.ts` — one normaliser per source into the existing job shape | `todo` | RemoteOK's fields (`position`, `company`, `apply_url`, `salary_min/max`, `tags`, `location`, `date`) map nearly 1:1; this is small |
-| B2 | Source dropdown on `Discover.tsx` | `todo` | Reuse the existing search-params → results → *Add lead* shape. No new page |
-| B3 | Reuse `jobToLeadDraft` for all sources | `todo` | Set `source` per feed so leads stay attributable |
-| B4 | HN thread parser (Algolia `search_by_date`, top-level comments) | `todo` | Highest-value, most work — comments are freeform text, not structured fields |
-| B5 | One test per normaliser over a committed real response | `todo` | Same rule as A5. **No hand-written fixtures** |
+| B1 | `src/lib/jobFeeds.ts` — one normaliser per source into the existing job shape | `done` | 2026-08-31. Three normalisers + `fetchFeed` + client-side `matchesQuery` (only Remotive supports a server-side search, so one filter path covers all three) |
+| B2 | Source dropdown on `Discover.tsx` | `done` | 2026-08-31. Defaults to RemoteOK; JobDataLake is now one option among four and its key gate is an inline notice, not a full-page block |
+| B3 | Reuse `jobToLeadDraft` for all sources | `done` | 2026-08-31. `jobToLeadDraft(job, source = "JobDataLake")` — one optional arg, no second draft function |
+| B4 | ~~HN thread parser~~ | `cut` | **Measured 2026-08-31: 2 hiring posts across all 7 months of 2026** (177 comments, 165 of them `SEEKING WORK`). See the HN detail below |
+| B5 | One test per normaliser over a committed real response | `done` | 2026-08-31. `src/lib/__fixtures__/{remoteok,remotive,arbeitnow}.json` are unedited slices of live responses; suite is **54 tests across 7 files**, up from 37/6 |
 
 **Why this exists:** it removes the single-vendor dependency the audit exposed,
 costs nothing, needs no signup, and keeps working if JobDataLake's free tier
 changes. **With phase A paused, this is the lead source — not a backup.**
-B1–B3 need no input from anyone and can start immediately.
+**Shipped 2026-08-31** (B1–B3, B5). Discover now returns real listings with no
+key, from three boards.
 
-**HN detail:** the thread runs monthly, posted on the 1st. August 2026 is HN id
-`49157021`. Volume is genuinely small — 15–33 comments a month, of which maybe a
-third are hiring rather than seeking. That is the trade being made deliberately:
-a handful of high-intent posts beats thousands of ATS listings.
+**End-to-end verified 2026-08-31, in a real browser against the live feeds** —
+not a test-suite claim. This closes the gap audit item A6 named, where the only
+verification record predated the feature it was read as covering.
+
+| Check | Result |
+|---|---|
+| RemoteOK search | 100 listings, legal notice row excluded |
+| Remotive search, keyword `react` | filtered set, all react-tagged |
+| Arbeitnow search | renders, `on_site` and `job_types[0]` correct |
+| *Add as Lead* | lead written with `source: "RemoteOK"`, real apply URL, `estimatedValueMin: null` — read back out of IndexedDB |
+| Duplicate guard | that listing shows *Already added* on the next search |
+| RemoteOK attribution | "Jobs from Remote OK" renders below their results |
+| JobDataLake with no key | inline notice, *Search* disabled, extra filters shown |
+| `npm run build` | clean, 340 kB / 103 kB gzipped |
+
+**Two defects the unit tests could not have caught, both found in that pass and
+fixed:**
+
+1. **Results survived a source change**, so *Add as Lead* on a leftover RemoteOK
+   row filed it under the newly selected source. Changing source now clears the
+   result list. A lead mis-attributed at creation is not recoverable from the
+   data — nothing else records which board it came from.
+2. **RemoteOK double-encodes its text**: `Macaé` arrives as `MacaÃ©`, and would
+   have been pasted into an outreach message that way. `fixMojibake()` re-decodes
+   it, guarded so correctly-encoded rows (`Macau`, `München`) are untouched. The
+   defect is in RemoteOK's own payload, not in our decoding — confirmed against
+   the raw bytes.
+
+**HN detail — the estimate was wrong by ~30×.** Every 2026 thread was counted
+via the Algolia comment API on 2026-08-31:
+
+| Thread | Comments | `SEEKING FREELANCER` | `SEEKING WORK` |
+|---|---|---|---|
+| Jan `46467231` | 29 | 0 | 25 |
+| Feb `46857644` | 33 | 1 | 24 |
+| Mar `47219697` | 25 | 0 | 23 |
+| Apr `47602028` | 18 | 0 | 15 |
+| May `47976154` | 19 | 0 | 18 |
+| Jun `48358236` | 33 | 1 | 28 |
+| Jul `48749020` | 20 | 0 | 19 |
+| Aug `49157021` | 15 | **0** | 15 |
+
+**2 hiring posts in 7 months.** The remaining 23 comments were read
+individually — none was a disguised hiring post; they are meta-discussion,
+replies, and one `SEEKING FREELANCE WORK`. The thread has inverted: it is
+freelancers advertising to each other, so its readers are competitors, not
+clients. B4 is `cut`, not deferred — a parser costing a day of work to surface
+0.3 leads a month is not a trade worth making at any price.
 
 ---
 
@@ -142,7 +188,7 @@ The weekend route is manual and starts now:
 
 | # | Action | Status |
 |---|---|---|
-| W1 | Apply in the live HN thread (id `49157021`) | `todo` |
+| W1 | ~~Apply in the live HN thread (id `49157021`)~~ | `cut` — measured 2026-08-31: 15 comments, all `SEEKING WORK`. Posting there advertises to competitors |
 | W2 | Upwork / Contra / r/forhire — direct applications | `todo` |
 | W3 | Sign up for the free JobDataLake key | `todo` | Doubles as A4's unblock — 10 minutes, no card |
 
@@ -294,6 +340,27 @@ Ordered by what they hold up. Q1 is settled; the rest need the user.
 ## Decisions and corrections
 
 Append-only. Newest first.
+
+- **2026-08-31 — phase B verified end to end in a browser, two defects fixed.**
+  Source changes now clear the result list (a stale row would have been filed
+  under the wrong source), and RemoteOK's double-encoded text is repaired before
+  it reaches a lead. Neither was reachable from the normaliser tests: one is
+  component state, the other only appears in rows the fixture did not carry.
+  Full check table in phase B above.
+- **2026-08-31 — phase B shipped; HN cut on measurement.** RemoteOK, Remotive
+  and Arbeitnow are live in Discover with no key, no signup and no card, tested
+  against committed real responses (53 tests, 7 files). The HN thread was cut
+  instead: counting every 2026 thread found **2 hiring posts in 7 months**
+  against the plan's "5–10 a month". The thread is now freelancers pitching
+  freelancers. W1 goes with it.
+- **2026-08-31 — RemoteOK salary fields are not imported.** Of 101 live rows,
+  4 carried a salary: one `30-36` (hourly) and three `10000-750000`
+  (placeholder). Remotive's `salary` is free text (`"$14/hour"`). Both map to
+  `null` rather than writing a fabricated value range onto a lead.
+- **2026-08-31 — `JobDataLakeJob`/`JobDataLakeError` renamed to
+  `JobListing`/`JobFeedError`.** Four sources now share the shape; the vendor
+  name on the type was about to become a lie. `jobToLeadDraft` takes an optional
+  `source` so leads stay attributable to the board they came from.
 
 - **2026-08-28 — Phase A paused; phase B promoted to primary.** The JobDataLake
   repair is parked rather than half-finished: its gate was a signup key, and the

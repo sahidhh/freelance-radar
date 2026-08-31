@@ -143,3 +143,39 @@ Explicit, human-approved exception to the "External services used manually only,
 - "Add as Lead" on a result creates a `NEW` lead prefilled from the listing (`source: "JobDataLake"`, `sourceUrl` = apply link). This is the only network dependency in the app; everything else remains fully offline/IndexedDB-only.
 - No server-side proxy, no bundled/shared API key, no automatic background fetching — the user must supply their own key and trigger each search manually, keeping it consistent with the spirit of "manual use of external services" even though the call itself is now automated plumbing rather than copy/paste.
 - Out of scope for this change: LinkedIn/Upwork scraping (still explicitly excluded — likely ToS violations), automatic lead ingestion, or any lead source other than the one API the user opted into.
+
+## Amendment 2026-08-31: keyless job feeds on Discover
+
+Extends the 2026-08-26 amendment. Same narrow exception, three more sources, no
+new class of dependency.
+
+- **Discover is now multi-source.** A Source dropdown selects between RemoteOK,
+  Remotive, Arbeitnow (all keyless) and JobDataLake (key). RemoteOK is the
+  default, so the screen works on a clean install with nothing configured.
+- **No key, no signup, no card** for the three feeds. Each was verified
+  browser-callable on 2026-08-31 (`access-control-allow-origin: *`), so there is
+  still no server-side proxy and no bundled key. Each returns its whole board in
+  one request and the keyword/location boxes filter client-side, because only
+  Remotive offers a server-side search.
+- **JobDataLake needs a key for usable fields, not for access.** The keyless
+  tier answers, but omits `company_name` and `url` — a lead with no company and
+  no apply link. The Discover empty state says this rather than implying the key
+  buys access. JobDataLake also remains unrepaired (see phase A in the ledger):
+  its endpoint path is wrong and every search 404s.
+- **"Add as Lead" attributes the lead to its feed** — `source` is `"RemoteOK"`,
+  `"Remotive"`, `"Arbeitnow"` or `"JobDataLake"`; `sourceUrl` stays the apply
+  link, which is what the existing duplicate check keys on.
+- **Salary is not imported from the keyless feeds.** RemoteOK's numbers are
+  placeholders or hourly rates and Remotive's is free text, so
+  `estimatedValueMin/Max` stay null rather than carrying a fabricated range.
+- **RemoteOK attribution is required by their API terms** — a followed link back
+  to remoteok.com renders below their results. Do not remove it.
+- Out of scope, unchanged: LinkedIn/Upwork scraping, automatic background
+  fetching, any ingestion the user did not trigger.
+- **Verification rule for this and every later external source:** each
+  normaliser is tested against a committed real response
+  (`src/lib/__fixtures__/`), never a hand-written object, and the screen is
+  driven once in a real browser against the live API before the work is called
+  done. The 2026-08-26 Discover integration shipped broken because neither was
+  true of it. This adds no test dependency — the browser pass is manual, and the
+  §Testing approach ban on Playwright/Cypress/jsdom in the repo still stands.

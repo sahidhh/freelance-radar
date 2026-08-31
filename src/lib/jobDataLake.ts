@@ -15,7 +15,7 @@ export interface JobSearchParams {
   perPage?: number
 }
 
-export interface JobDataLakeJob {
+export interface JobListing {
   id: string
   title: string
   company: string
@@ -29,7 +29,7 @@ export interface JobDataLakeJob {
   postedAt: string | null
 }
 
-export class JobDataLakeError extends Error {}
+export class JobFeedError extends Error {}
 
 export function getStoredApiKey(): string {
   return localStorage.getItem(API_KEY_STORAGE_KEY) ?? ""
@@ -48,7 +48,7 @@ function numOrNull(v: unknown): number | null {
 // JobDataLake's REST schema isn't publicly documented without a signed-up key
 // (only the MCP tool wrapper is), so field names are matched defensively
 // against every reasonable variant rather than a single assumed shape.
-function normalizeJob(raw: Record<string, unknown>): JobDataLakeJob {
+function normalizeJob(raw: Record<string, unknown>): JobListing {
   return {
     id: String(raw.job_handle ?? raw.id ?? crypto.randomUUID()),
     title: String(raw.title ?? "Untitled role"),
@@ -68,9 +68,9 @@ function normalizeJob(raw: Record<string, unknown>): JobDataLakeJob {
   }
 }
 
-export async function searchJobs(params: JobSearchParams, apiKey: string): Promise<JobDataLakeJob[]> {
+export async function searchJobs(params: JobSearchParams, apiKey: string): Promise<JobListing[]> {
   if (!apiKey) {
-    throw new JobDataLakeError("No JobDataLake API key set. Add one in Settings.")
+    throw new JobFeedError("No JobDataLake API key set. Add one in Settings.")
   }
 
   const qs = new URLSearchParams()
@@ -87,20 +87,20 @@ export async function searchJobs(params: JobSearchParams, apiKey: string): Promi
       headers: { "X-API-Key": apiKey },
     })
   } catch (err) {
-    throw new JobDataLakeError(
+    throw new JobFeedError(
       "Network request to JobDataLake failed. This may be a CORS restriction on their API — check the browser console for details.",
       { cause: err }
     )
   }
 
   if (res.status === 401 || res.status === 403) {
-    throw new JobDataLakeError("JobDataLake rejected the API key. Check the key in Settings.")
+    throw new JobFeedError("JobDataLake rejected the API key. Check the key in Settings.")
   }
   if (res.status === 429) {
-    throw new JobDataLakeError("JobDataLake rate limit reached. Try again later.")
+    throw new JobFeedError("JobDataLake rate limit reached. Try again later.")
   }
   if (!res.ok) {
-    throw new JobDataLakeError(`JobDataLake request failed (HTTP ${res.status}).`)
+    throw new JobFeedError(`JobDataLake request failed (HTTP ${res.status}).`)
   }
 
   const data = await res.json()
@@ -111,7 +111,7 @@ export async function searchJobs(params: JobSearchParams, apiKey: string): Promi
   return rawJobs.map(normalizeJob)
 }
 
-export function jobToLeadDraft(job: JobDataLakeJob): NewLead {
+export function jobToLeadDraft(job: JobListing, source = "JobDataLake"): NewLead {
   return {
     businessName: job.company,
     website: "",
@@ -120,7 +120,7 @@ export function jobToLeadDraft(job: JobDataLakeJob): NewLead {
     phone: "",
     location: job.location,
     industry: "",
-    source: "JobDataLake",
+    source,
     sourceUrl: job.applyUrl,
     opportunity: job.title,
     problem: "",
