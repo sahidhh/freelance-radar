@@ -137,8 +137,8 @@ export default function Outreach() {
       : undefined
 
   return (
-    <div className="grid grid-cols-3 gap-6">
-      <div className="col-span-1 flex flex-col gap-4">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="flex flex-col gap-4 lg:col-span-1">
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((f) => (
             <button
@@ -170,8 +170,8 @@ export default function Outreach() {
                   selected?.id === o.id && "border-primary"
                 )}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-on-surface">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate text-sm font-medium text-on-surface">
                     {lead?.businessName ?? "Unknown lead"}
                   </span>
                   <StatusPill status={o.status} />
@@ -186,7 +186,7 @@ export default function Outreach() {
         </div>
       </div>
 
-      <div className="col-span-2">
+      <div className="lg:col-span-2">
         {!selected || !selectedLead ? (
           <Card>
             <CardContent>
@@ -260,7 +260,7 @@ export default function Outreach() {
               </div>
 
               {showFollowUp && (
-                <div className="flex items-center gap-3 rounded border border-outline-variant p-3">
+                <div className="flex flex-col gap-3 rounded border border-outline-variant p-3 sm:flex-row sm:items-center">
                   <label className="flex flex-1 flex-col gap-1.5 text-sm">
                     <span className="font-medium text-on-surface-variant">Follow-up date</span>
                     <Input
@@ -269,10 +269,18 @@ export default function Outreach() {
                       onChange={(e) => setFollowUpDate(e.target.value)}
                     />
                   </label>
-                  <Button onClick={handleConfirmSent}>Confirm Sent</Button>
-                  <Button variant="ghost" onClick={() => setShowFollowUp(false)}>
-                    Cancel
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={handleConfirmSent} className="flex-1 sm:flex-none">
+                      Confirm Sent
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowFollowUp(false)}
+                      className="flex-1 sm:flex-none"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>

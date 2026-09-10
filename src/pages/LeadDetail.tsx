@@ -76,21 +76,30 @@ export default function LeadDetail() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-2">
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
+        <div className="flex min-w-0 flex-col gap-2">
           <StatusBadge status={lead.status} />
-          <h2 className="text-3xl font-semibold text-on-surface">{lead.businessName}</h2>
+          <h2 className="text-2xl font-semibold text-on-surface sm:text-3xl">
+            {lead.businessName}
+          </h2>
           {lead.opportunity && (
             <p className="max-w-2xl text-sm text-on-surface-variant">{lead.opportunity}</p>
           )}
         </div>
-        <div className="flex shrink-0 gap-2">
-          <Button variant="secondary" onClick={() => navigate(`/leads/${lead.id}/edit`)}>
+        <div className="flex w-full shrink-0 flex-wrap gap-2 sm:w-auto">
+          <Button
+            variant="secondary"
+            onClick={() => navigate(`/leads/${lead.id}/edit`)}
+            className="flex-1 sm:flex-none"
+          >
             <Pencil className="h-4 w-4" />
             Edit Details
           </Button>
           {lead.email && (
-            <a href={`mailto:${lead.email}`} className={buttonVariants({ variant: "secondary" })}>
+            <a
+              href={`mailto:${lead.email}`}
+              className={buttonVariants({ variant: "secondary", className: "flex-1 sm:flex-none" })}
+            >
               <Mail className="h-4 w-4" />
               Email Client
             </a>
@@ -100,7 +109,7 @@ export default function LeadDetail() {
 
       {!isTerminalStatus(lead.status) && (
         <Card className="border-primary bg-primary-container text-on-primary">
-          <CardContent className="flex items-center justify-between gap-4 p-0">
+          <CardContent className="flex flex-col items-start gap-4 p-0 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="text-xs font-semibold uppercase tracking-wide opacity-80">
                 Next Action
@@ -112,6 +121,7 @@ export default function LeadDetail() {
               <Button
                 variant="secondary"
                 onClick={() => action.onClick(navigate, refresh)}
+                className="w-full sm:w-auto"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 {action.label}
@@ -121,9 +131,9 @@ export default function LeadDetail() {
         </Card>
       )}
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 flex flex-col gap-6">
-          <div className="flex items-center justify-between">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-base font-medium text-on-surface">Research</h3>
             <Button variant="secondary" size="sm" onClick={handleCopyPrompt}>
               <ClipboardCopy className="h-3.5 w-3.5" />
@@ -179,13 +189,13 @@ export default function LeadDetail() {
               {outreach.map((o) => (
                 <div
                   key={o.id}
-                  className="flex items-center justify-between rounded border border-outline-variant px-3 py-2 text-sm"
+                  className="flex flex-col gap-1.5 rounded border border-outline-variant px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <span className="font-medium">{o.type.replace(/_/g, " ")}</span>
                     <span className="ml-2 text-on-surface-variant">{o.subject}</span>
                   </div>
-                  <div className="flex items-center gap-3 font-mono text-xs text-on-surface-variant">
+                  <div className="flex shrink-0 items-center gap-3 font-mono text-xs text-on-surface-variant">
                     <span>{o.status}</span>
                     <span>{formatDate(o.sentAt)}</span>
                   </div>
@@ -203,9 +213,12 @@ export default function LeadDetail() {
                 <p className="text-sm text-on-surface-variant">No activity yet.</p>
               )}
               {activities.map((a) => (
-                <div key={a.id} className="flex items-center justify-between text-sm">
+                <div
+                  key={a.id}
+                  className="flex flex-col gap-0.5 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+                >
                   <span className="text-on-surface">{a.description}</span>
-                  <span className="font-mono text-xs text-on-surface-variant">
+                  <span className="shrink-0 font-mono text-xs text-on-surface-variant">
                     {formatDate(a.createdAt)}
                   </span>
                 </div>

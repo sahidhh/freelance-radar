@@ -24,11 +24,14 @@ export default function Pipeline() {
   }
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
+    <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4">
       {LEAD_STATUSES.map((status) => {
         const columnLeads = byStatus.get(status) ?? []
         return (
-          <div key={status} className="flex w-64 shrink-0 flex-col gap-3">
+          <div
+            key={status}
+            className="flex w-[85vw] shrink-0 snap-start flex-col gap-3 sm:w-64"
+          >
             <div className="flex items-center justify-between px-1">
               <span className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
                 {status.replace(/_/g, " ")}

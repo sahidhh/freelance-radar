@@ -114,8 +114,8 @@ export default function Leads() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="flex flex-col gap-5 sm:gap-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((f) => (
             <button
@@ -134,11 +134,11 @@ export default function Leads() {
           placeholder="Search leads…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-64"
+          className="w-full sm:w-64"
         />
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <label className="flex items-center gap-2 text-sm text-on-surface-variant">
           <input
             type="checkbox"
@@ -158,7 +158,91 @@ export default function Leads() {
         </label>
       </div>
 
-      <div className="rounded-lg border border-outline-variant bg-surface-lowest">
+      {sorted.length === 0 && (
+        <div className="rounded-lg border border-outline-variant bg-surface-lowest px-4 py-10 text-center text-sm text-on-surface-variant">
+          No leads match this view.
+        </div>
+      )}
+
+      {sorted.length > 0 && (
+        <div className="flex flex-col gap-3 md:hidden">
+          {sorted.map((lead) => (
+            <div
+              key={lead.id}
+              className="flex flex-col gap-3 rounded-lg border border-outline-variant bg-surface-lowest p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <button
+                  className="min-w-0 text-left"
+                  onClick={() => navigate(`/leads/${lead.id}`)}
+                >
+                  <div className="truncate font-medium text-on-surface hover:text-primary">
+                    {lead.businessName}
+                  </div>
+                  {lead.contactName && (
+                    <div className="truncate text-xs text-on-surface-variant">
+                      {lead.contactName}
+                    </div>
+                  )}
+                </button>
+                <span className="shrink-0 font-mono text-sm text-primary">
+                  {lead.score ?? "—"}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge status={lead.status} />
+                <span className="font-mono text-xs text-on-surface-variant">
+                  {formatValueRange(lead.estimatedValueMin, lead.estimatedValueMax)}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs text-on-surface-variant">
+                <div>
+                  <div className="uppercase tracking-wide">Next action</div>
+                  <div className="mt-0.5 truncate text-on-surface">{lead.nextAction || "—"}</div>
+                </div>
+                <div>
+                  <div className="uppercase tracking-wide">Last contact</div>
+                  <div className="mt-0.5 font-mono text-on-surface">
+                    {formatDate(getLastContact(outreachByLead.get(lead.id) ?? []))}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-1 border-t border-outline-variant pt-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Open"
+                  onClick={() => navigate(`/leads/${lead.id}`)}
+                >
+                  <FolderOpen className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Edit"
+                  onClick={() => navigate(`/leads/${lead.id}/edit`)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title={lead.archived ? "Restore" : "Archive"}
+                  onClick={() => handleArchive(lead.id, lead.archived)}
+                >
+                  {lead.archived ? (
+                    <ArchiveRestore className="h-4 w-4" />
+                  ) : (
+                    <Archive className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="hidden rounded-lg border border-outline-variant bg-surface-lowest md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -172,13 +256,6 @@ export default function Leads() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sorted.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-on-surface-variant">
-                  No leads match this view.
-                </TableCell>
-              </TableRow>
-            )}
             {sorted.map((lead) => (
               <TableRow key={lead.id}>
                 <TableCell>
