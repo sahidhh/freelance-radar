@@ -309,11 +309,13 @@ computed on import, so scoring stops being hand-entered.
 
 1. ~~Target city / market.~~ **Resolved above:** United States first,
    tourist-town hospitality, Google Places as the only discovery source.
-2. How is the prototype generated — by hand, or from the lead's own Instagram
-   photos and bio? Affects whether phase 2 needs a generation step or just a
-   `prototypeUrl` field. *(The field is specified either way.)*
-3. Are the sales tips a fixed rotating library or written per lead? Affects
-   whether `outreachTemplate.ts` needs a tips-content module.
+2. ~~How is the prototype generated?~~ **Resolved 2026-09-10:** from the
+   lead's own Instagram photos and bio — phase 3 needs an actual generation
+   step, not just the `prototypeUrl` field landing a manually-built link.
+3. ~~Are the sales tips a fixed rotating library or written per lead?~~
+   **Resolved 2026-09-10:** written per lead is primary; `outreachTemplate.ts`
+   falls back to a small fixed rotating tips-content module when no per-lead
+   tips exist.
 4. Starting daily DM cap — 10 remains the right default. Note what verification
    established: **Instagram publishes no DM limits at all.** Every number in
    this document traces to vendors who sell DM-automation tools, who have an
