@@ -27,16 +27,16 @@ Last updated: **2026-08-31** · Spec verified: **2026-08-28** · Code written: *
 
 | # | Phase | Status | Gate to enter | Cost surface |
 |---|---|---|---|---|
-| — | Repo hygiene | `todo` | none | none |
-| **A** | **Discover / JobDataLake repair** (audit fix plan) | `paused` | — | free |
+| — | Repo hygiene | `done` | — | none |
+| **A** | **Discover / JobDataLake repair** (audit fix plan) | `done` | — | free |
 | — | Audit doc fixes (A6–A8, A10, A11) | `done` | — | none |
 | **B** | **Free keyless job feeds** | `done` | — | free, no signup |
-| **C** | **Gig sources** (Freelancer.com, Jobicy) | `blocked` | C0 done, ToS ambiguous — **needs a free Freelancer.com OAuth app registration**, no longer keyless | free, no signup for Jobicy; Freelancer.com now needs signup |
-| 0 | Schema + DM budget setting | `todo` | Phase −1 merged | none |
-| 1 | Paste-and-parse bulk intake | `todo` | Phase 0 | none |
-| 2 | PageSpeed enrichment + auto-scoring | `blocked` | Phase 0; **needs a Google API key** | free, 25k/day |
-| 3 | Prototype-first templates + capped send queue | `blocked` | Phase 1 + 2; **needs Q2/Q3 answered** | none |
-| 4 | Google Places discovery | `todo` | **20-lead field test of phases 1–3 first** | 1k calls/mo free — but **requires a billing card on file** |
+| **C** | **Gig sources** (Freelancer.com, Jobicy) | `blocked` | C0 done, ToS ambiguous — **needs a free Freelancer.com OAuth app registration**, no longer keyless. Registration itself is now blocked on Freelancer.com requiring payment + email verification on the account first | free, no signup for Jobicy; Freelancer.com now needs signup |
+| 0 | Schema + DM budget setting | `done` | Phase −1 merged | none |
+| 1 | Paste-and-parse bulk intake | `done` | Phase 0 | none |
+| 2 | PageSpeed enrichment + auto-scoring | `done` | Phase 0 | free, 25k/day |
+| 3 | Prototype-first templates + capped send queue | `todo` | Phase 1 + 2 done, Q2/Q3 answered 2026-09-10 | none |
+| 4 | Google Places discovery | `deferred` | User declined billing-card setup 2026-09-10; **20-lead field test of phases 1–3 first** regardless | 1k calls/mo free — but **requires a billing card on file** |
 | 5 | Reply-rate tracking per pitch variant | `todo` | Phase 3 has shipped real sends | none |
 | 6 | SERP APIs, Meta Business Discovery, Apify | `todo` | never, realistically | varies |
 | — | OpenStreetMap sourcing | `cut` | — | — |
@@ -49,13 +49,15 @@ signup and no card, and does not wait on anything. The Instagram plan is a 3–6
 week machine by comparison. Phase 4 is the only item anywhere here that needs a
 card, so it sits last regardless of its position in the original spec.
 
-**Phase A is paused (2026-08-28, user decision).** Its blocker was a
-JobDataLake key, and the feature is not worth the signup while phase B covers
-the same need for free. **Note what pausing does not do: Discover remains
-broken and still 404s.** That is tolerable on a single-user tool, but "paused"
-must not later be misread as "fixed". A1 alone is a one-line fix if the 404
-becomes annoying — it will not make the feature *useful* without a key, which is
-why the whole phase is parked rather than half-done.
+**Phase A was paused 2026-08-28** (user decision — blocker was a JobDataLake
+key, not worth the signup while phase B covered the need for free) and **fixed
+2026-09-10** once the user signed up and handed over a working key. The bug
+was real and confirmed live, not just doc-stale: wrong endpoint
+(`/jobs/search` instead of `/jobs`), wrong query param (`query` instead of
+`q`), a `posted_within` param that doesn't exist (real one is `posted_after`,
+epoch-**milliseconds** — confirmed empirically, not from docs, by comparing
+filtered result counts), plus response field-mapping bugs (`locations` is an
+array, `posted_at` is epoch-ms not a string). See commit `82287b6`.
 
 ---
 
@@ -66,8 +68,8 @@ expensive the longer they sit.
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| H1 | Merge `claude/mobile-ui-overhaul-g7iffk` | `todo` | 1 commit, 9 files, no PR. Touches `Leads`/`Outreach`/`Settings`/`LeadForm`/`App` — the exact files phases 0–3 edit. **Do this before phase 0**; the conflict cost only grows. |
-| H2 | Merge this research/spec branch | `todo` | `claude/instagram-outreach-research-vxvtlj`, docs only, zero merge risk |
+| H1 | Merge `claude/mobile-ui-overhaul-g7iffk` | `done` | Merged 2026-09-10, clean, no conflicts, 54/54 tests green at merge time |
+| H2 | Merge this research/spec branch | `done` | Already merged via PR #3; the one trailing commit PR #3 missed (`22ed1f1`) cherry-picked onto master 2026-09-10 |
 | H3 | Fast-forward local `master` | `done` | Local `master` already matches `origin/master` as of this session (2026-09-10) |
 | H4 | `npm install`, confirm `build` + `test` green | `done` | Done 2026-08-28. `npx tsc -b` exits 0; **54 tests across 7 files pass** — verified this session (2026-09-10) via `npm test`, all passing — that is the real baseline to protect |
 
