@@ -3,6 +3,7 @@ import { Download, Upload } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import {
   EXPORT_VERSION,
   exportAllData,
@@ -76,6 +77,7 @@ export default function Settings() {
   const [csvErrors, setCsvErrors] = useState<string[]>([])
   const [csvPending, setCsvPending] = useState<CsvImportState | null>(null)
   const [csvSuccess, setCsvSuccess] = useState(false)
+  const [csvPasteText, setCsvPasteText] = useState("")
 
   async function handleExportJson() {
     const payload = await exportAllData()
@@ -137,6 +139,21 @@ export default function Settings() {
       return
     }
     setCsvPending({ leads })
+  }
+
+  function handleCsvPasteParse() {
+    if (!csvPasteText.trim()) return
+    setCsvSuccess(false)
+    setCsvPending(null)
+    setCsvErrors([])
+
+    const { leads, errors } = parseLeadsCsv(csvPasteText)
+    if (errors.length > 0) {
+      setCsvErrors(errors)
+      return
+    }
+    setCsvPending({ leads })
+    setCsvPasteText("")
   }
 
   async function confirmCsvImport() {
@@ -316,6 +333,23 @@ export default function Settings() {
               className="hidden"
               onChange={handleCsvFileChange}
             />
+          </div>
+          <div className="flex flex-col gap-3">
+            <Textarea
+              placeholder="Or paste CSV text here (same columns as the export)"
+              value={csvPasteText}
+              onChange={(e) => setCsvPasteText(e.target.value)}
+              rows={6}
+              className="font-mono text-xs"
+            />
+            <Button
+              variant="secondary"
+              onClick={handleCsvPasteParse}
+              disabled={!csvPasteText.trim()}
+              className="sm:w-auto"
+            >
+              Parse pasted CSV
+            </Button>
           </div>
           {csvErrors.length > 0 && (
             <div className="rounded border border-error px-3 py-2 text-sm text-error">
