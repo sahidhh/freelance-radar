@@ -1,0 +1,102 @@
+{
+  "captchaResult": "CAPTCHA_NOT_NEEDED",
+  "kind": "pagespeedonline#result",
+  "id": "https://example-guesthouse.com/",
+  "loadingExperience": {
+    "id": "https://example-guesthouse.com/",
+    "metrics": {
+      "LARGEST_CONTENTFUL_PAINT_MS": {
+        "percentile": 8412,
+        "distributions": [
+          { "min": 0, "max": 2500, "proportion": 0.12 },
+          { "min": 2500, "max": 4000, "proportion": 0.2 },
+          { "min": 4000, "proportion": 0.68 }
+        ],
+        "category": "SLOW"
+      }
+    },
+    "overall_category": "SLOW",
+    "initial_url": "https://example-guesthouse.com/"
+  },
+  "analysisUTCTimestamp": "2026-09-01T12:00:00.000Z",
+  "lighthouseResult": {
+    "requestedUrl": "https://example-guesthouse.com/",
+    "finalUrl": "https://example-guesthouse.com/",
+    "lighthouseVersion": "12.2.1",
+    "userAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36",
+    "fetchTime": "2026-09-01T12:00:00.000Z",
+    "environment": {
+      "networkUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022))",
+      "hostUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022))",
+      "benchmarkIndex": 1023
+    },
+    "configSettings": {
+      "emulatedFormFactor": "mobile",
+      "formFactor": "mobile",
+      "locale": "en-US"
+    },
+    "categories": {
+      "performance": {
+        "id": "performance",
+        "title": "Performance",
+        "score": 0.31
+      }
+    },
+    "audits": {
+      "largest-contentful-paint": {
+        "id": "largest-contentful-paint",
+        "title": "Largest Contentful Paint",
+        "description": "Largest Contentful Paint marks the time at which the largest text or image is painted.",
+        "score": 0.02,
+        "scoreDisplayMode": "numeric",
+        "displayValue": "8.4 s",
+        "numericValue": 8412,
+        "numericUnit": "millisecond"
+      },
+      "total-blocking-time": {
+        "id": "total-blocking-time",
+        "title": "Total Blocking Time",
+        "description": "Sum of all time periods between FCP and Time to Interactive.",
+        "score": 0.45,
+        "scoreDisplayMode": "numeric",
+        "displayValue": "620 ms",
+        "numericValue": 620,
+        "numericUnit": "millisecond"
+      },
+      "cumulative-layout-shift": {
+        "id": "cumulative-layout-shift",
+        "title": "Cumulative Layout Shift",
+        "description": "Cumulative Layout Shift measures the movement of visible elements within the viewport.",
+        "score": 0.85,
+        "scoreDisplayMode": "numeric",
+        "displayValue": "0.12",
+        "numericValue": 0.12,
+        "numericUnit": "unitless"
+      },
+      "first-contentful-paint": {
+        "id": "first-contentful-paint",
+        "title": "First Contentful Paint",
+        "description": "First Contentful Paint marks the time at which the first text or image is painted.",
+        "score": 0.2,
+        "scoreDisplayMode": "numeric",
+        "displayValue": "4.9 s",
+        "numericValue": 4936,
+        "numericUnit": "millisecond"
+      },
+      "speed-index": {
+        "id": "speed-index",
+        "title": "Speed Index",
+        "description": "Speed Index shows how quickly the contents of a page are visibly populated.",
+        "score": 0.3,
+        "scoreDisplayMode": "numeric",
+        "displayValue": "6.8 s",
+        "numericValue": 6812,
+        "numericUnit": "millisecond"
+      }
+    },
+    "categoryGroups": {},
+    "timing": {
+      "total": 8934
+    }
+  }
+}

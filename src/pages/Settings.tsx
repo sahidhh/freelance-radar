@@ -17,6 +17,7 @@ import {
 import { getAllLeads } from "@/db/leads"
 import { getStoredApiKey, setStoredApiKey } from "@/lib/jobDataLake"
 import { getDmDailyBudget, setDmDailyBudget } from "@/lib/dmBudget"
+import { getPsiApiKey, setPsiApiKey } from "@/lib/pagespeed"
 import type { Lead } from "@/db/schema"
 
 function downloadFile(filename: string, content: string, mimeType: string) {
@@ -68,6 +69,20 @@ export default function Settings() {
     setDmDailyBudget(n)
     setDmBudgetInput(String(getDmDailyBudget()))
     setDmBudgetSaved(true)
+  }
+
+  const [psiKeyInput, setPsiKeyInput] = useState(getPsiApiKey())
+  const [psiKeySaved, setPsiKeySaved] = useState(false)
+
+  function handleSavePsiKey() {
+    setPsiApiKey(psiKeyInput.trim())
+    setPsiKeySaved(true)
+  }
+
+  function handleClearPsiKey() {
+    setPsiApiKey("")
+    setPsiKeyInput("")
+    setPsiKeySaved(false)
   }
 
   const [jsonErrors, setJsonErrors] = useState<string[]>([])
@@ -238,6 +253,39 @@ export default function Settings() {
             </Button>
           </div>
           {dmBudgetSaved && <p className="text-sm text-success">Daily DM budget saved.</p>}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>PageSpeed Insights</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <p className="text-sm text-on-surface-variant">
+            Runs a mobile Lighthouse performance check on a lead's website, so the outreach pitch
+            is evidence-based instead of opinion-based. The key is stored only in this browser.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Input
+              type="password"
+              placeholder="PageSpeed Insights API key"
+              value={psiKeyInput}
+              onChange={(e) => {
+                setPsiKeyInput(e.target.value)
+                setPsiKeySaved(false)
+              }}
+              className="w-full sm:max-w-sm"
+            />
+            <Button variant="secondary" onClick={handleSavePsiKey} disabled={!psiKeyInput.trim()}>
+              Save
+            </Button>
+            {getPsiApiKey() && (
+              <Button variant="ghost" onClick={handleClearPsiKey}>
+                Clear
+              </Button>
+            )}
+          </div>
+          {psiKeySaved && <p className="text-sm text-success">API key saved.</p>}
         </CardContent>
       </Card>
 

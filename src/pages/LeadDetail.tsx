@@ -1,14 +1,15 @@
 import { useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import { Mail, Pencil, Trash2, CheckCircle2, ClipboardCopy } from "lucide-react"
+import { Link, useNavigate, useParams } from "react-router-dom"
+import { Mail, Pencil, Trash2, CheckCircle2, ClipboardCopy, Gauge } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { StatusBadge } from "@/components/StatusBadge"
 import { useActivitiesForLead, useLead, useOutreachForLead } from "@/lib/hooks"
-import { deleteLead, setStatus } from "@/db/leads"
+import { deleteLead, setStatus, updateLead } from "@/db/leads"
 import { formatDate, formatValueRange } from "@/lib/format"
 import { getNextActionLabel, isTerminalStatus } from "@/lib/nextAction"
 import { buildResearchPrompt } from "@/lib/researchPrompt"
+import { getPsiApiKey, runPagespeedCheck } from "@/lib/pagespeed"
 import type { LeadStatus } from "@/db/schema"
 
 function primaryAction(
@@ -54,6 +55,9 @@ export default function LeadDetail() {
   const { outreach } = useOutreachForLead(id)
   const { activities } = useActivitiesForLead(id)
   const [copied, setCopied] = useState(false)
+  const [psiChecking, setPsiChecking] = useState(false)
+  const [psiError, setPsiError] = useState("")
+  const [psiNeedsKey, setPsiNeedsKey] = useState(false)
 
   if (!lead) return <div>Loading…</div>
 
@@ -64,6 +68,32 @@ export default function LeadDetail() {
     await navigator.clipboard.writeText(buildResearchPrompt(lead))
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function handleCheckPagespeed() {
+    if (!lead || !lead.website) return
+    const key = getPsiApiKey()
+    if (!key) {
+      setPsiNeedsKey(true)
+      setPsiError("")
+      return
+    }
+    setPsiNeedsKey(false)
+    setPsiError("")
+    setPsiChecking(true)
+    try {
+      const { score, failingMetric } = await runPagespeedCheck(lead.website, key)
+      await updateLead(lead.id, {
+        psiScore: score,
+        psiFailingMetric: failingMetric,
+        psiCheckedAt: new Date().toISOString(),
+      })
+      refresh()
+    } catch (err) {
+      setPsiError(err instanceof Error ? err.message : "PageSpeed check failed.")
+    } finally {
+      setPsiChecking(false)
+    }
   }
 
   async function handleDelete() {
@@ -252,6 +282,59 @@ export default function LeadDetail() {
               )}
             </CardContent>
           </Card>
+
+          {lead.website && (
+            <Card>
+              <CardHeader>
+                <CardTitle>PageSpeed</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3 text-sm">
+                {lead.psiScore != null ? (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-on-surface-variant">Mobile score</span>
+                      <span className="font-mono">{lead.psiScore}/100</span>
+                    </div>
+                    {lead.psiFailingMetric && (
+                      <div className="flex justify-between gap-3">
+                        <span className="text-on-surface-variant">Worst metric</span>
+                        <span className="font-mono">{lead.psiFailingMetric}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-on-surface-variant">Checked</span>
+                      <span>{formatDate(lead.psiCheckedAt)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-on-surface-variant">Not checked yet.</p>
+                )}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleCheckPagespeed}
+                  disabled={psiChecking}
+                  className="w-full sm:w-auto"
+                >
+                  <Gauge className="h-3.5 w-3.5" />
+                  {psiChecking
+                    ? "Checking…"
+                    : lead.psiScore != null
+                      ? "Re-check PageSpeed"
+                      : "Check PageSpeed"}
+                </Button>
+                {psiNeedsKey && (
+                  <div className="flex flex-wrap items-center gap-2 rounded border border-outline px-3 py-2 text-xs text-on-surface-variant">
+                    <span>No PageSpeed Insights API key set.</span>
+                    <Link to="/settings" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                      Add key
+                    </Link>
+                  </div>
+                )}
+                {psiError && <p className="text-sm text-error">{psiError}</p>}
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
