@@ -47,13 +47,18 @@ function numOrNull(v: unknown): number | null {
 
 // JobDataLake's REST schema isn't publicly documented without a signed-up key
 // (only the MCP tool wrapper is), so field names are matched defensively
-// against every reasonable variant rather than a single assumed shape.
-function normalizeJob(raw: Record<string, unknown>): JobListing {
+// against every reasonable variant rather than a single assumed shape. The
+// `locations` array and epoch-ms `posted_at` below are confirmed real
+// (see src/lib/__fixtures__/jobdatalake-search.json); the other fallbacks
+// stay defensive since the rest of the schema is still unverified.
+export function normalizeJob(raw: Record<string, unknown>): JobListing {
   return {
     id: String(raw.job_handle ?? raw.id ?? crypto.randomUUID()),
     title: String(raw.title ?? "Untitled role"),
     company: String(raw.company ?? raw.company_name ?? "Unknown company"),
-    location: String(raw.location ?? ""),
+    location: Array.isArray(raw.locations)
+      ? (raw.locations as string[]).join(", ")
+      : String(raw.location ?? ""),
     remoteType: String(raw.remote_type ?? ""),
     employmentType: String(raw.employment_type ?? ""),
     salaryMin: numOrNull(raw.salary_min_usd ?? raw.salary_min),
@@ -64,8 +69,31 @@ function normalizeJob(raw: Record<string, unknown>): JobListing {
         ? (raw.required_skills as string[])
         : [],
     applyUrl: String(raw.apply_url ?? raw.url ?? raw.apply_link ?? ""),
-    postedAt: raw.posted_at ? String(raw.posted_at) : null,
+    postedAt:
+      typeof raw.posted_at === "number"
+        ? new Date(raw.posted_at).toISOString()
+        : raw.posted_at
+          ? String(raw.posted_at)
+          : null,
   }
+}
+
+const POSTED_WITHIN_MS: Record<"24h" | "7d" | "30d", number> = {
+  "24h": 24 * 60 * 60 * 1000,
+  "7d": 7 * 24 * 60 * 60 * 1000,
+  "30d": 30 * 24 * 60 * 60 * 1000,
+}
+
+// JobDataLake has no "posted_within" param; the real filter is
+// "posted_after", a Unix timestamp in MILLISECONDS. This converts the
+// public postedWithin shorthand into that timestamp, computed against `now`
+// (defaulting to the real clock, overridable for tests).
+export function postedAfterMs(
+  postedWithin: JobSearchParams["postedWithin"],
+  now: number = Date.now()
+): number | null {
+  if (!postedWithin) return null
+  return now - POSTED_WITHIN_MS[postedWithin]
 }
 
 export async function searchJobs(params: JobSearchParams, apiKey: string): Promise<JobListing[]> {
@@ -74,16 +102,17 @@ export async function searchJobs(params: JobSearchParams, apiKey: string): Promi
   }
 
   const qs = new URLSearchParams()
-  qs.set("query", params.query?.trim() || "*")
+  qs.set("q", params.query?.trim() || "*")
   if (params.location) qs.set("location", params.location)
   if (params.remoteType) qs.set("remote_type", params.remoteType)
   if (params.employmentType) qs.set("employment_type", params.employmentType)
-  if (params.postedWithin) qs.set("posted_within", params.postedWithin)
+  const postedAfter = postedAfterMs(params.postedWithin)
+  if (postedAfter !== null) qs.set("posted_after", String(postedAfter))
   qs.set("per_page", String(params.perPage ?? 20))
 
   let res: Response
   try {
-    res = await fetch(`${JOBDATALAKE_BASE_URL}/jobs/search?${qs.toString()}`, {
+    res = await fetch(`${JOBDATALAKE_BASE_URL}/jobs?${qs.toString()}`, {
       headers: { "X-API-Key": apiKey },
     })
   } catch (err) {
