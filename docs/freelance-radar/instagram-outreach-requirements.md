@@ -309,9 +309,13 @@ computed on import, so scoring stops being hand-entered.
 
 1. ~~Target city / market.~~ **Resolved above:** United States first,
    tourist-town hospitality, Google Places as the only discovery source.
-2. ~~How is the prototype generated?~~ **Resolved 2026-09-10:** from the
-   lead's own Instagram photos and bio — phase 3 needs an actual generation
-   step, not just the `prototypeUrl` field landing a manually-built link.
+2. ~~How is the prototype generated?~~ **Resolved 2026-09-10, corrected same
+   day:** the mockup is still built **by hand** (per the build-order section
+   above — "20+ minutes of budget per lead, enough to build the mockup before
+   messaging"), no code auto-generates it. The user's source material for that
+   manual build is the lead's own Instagram photos and bio, not a from-scratch
+   design. `prototypeUrl` (Phase 0) just stores wherever the finished mockup
+   ends up hosted — no generation step belongs in this codebase.
 3. ~~Are the sales tips a fixed rotating library or written per lead?~~
    **Resolved 2026-09-10:** written per lead is primary; `outreachTemplate.ts`
    falls back to a small fixed rotating tips-content module when no per-lead
