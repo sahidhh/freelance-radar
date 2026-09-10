@@ -15,6 +15,7 @@ import {
 } from "@/db/exportImport"
 import { getAllLeads } from "@/db/leads"
 import { getStoredApiKey, setStoredApiKey } from "@/lib/jobDataLake"
+import { getDmDailyBudget, setDmDailyBudget } from "@/lib/dmBudget"
 import type { Lead } from "@/db/schema"
 
 function downloadFile(filename: string, content: string, mimeType: string) {
@@ -55,6 +56,17 @@ export default function Settings() {
     setStoredApiKey("")
     setApiKeyInput("")
     setApiKeySaved(false)
+  }
+
+  const [dmBudgetInput, setDmBudgetInput] = useState(String(getDmDailyBudget()))
+  const [dmBudgetSaved, setDmBudgetSaved] = useState(false)
+
+  function handleSaveDmBudget() {
+    const n = Number(dmBudgetInput)
+    if (!Number.isFinite(n) || n <= 0) return
+    setDmDailyBudget(n)
+    setDmBudgetInput(String(getDmDailyBudget()))
+    setDmBudgetSaved(true)
   }
 
   const [jsonErrors, setJsonErrors] = useState<string[]>([])
@@ -175,6 +187,40 @@ export default function Settings() {
             )}
           </div>
           {apiKeySaved && <p className="text-sm text-success">API key saved.</p>}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Daily DM Budget</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <p className="text-sm text-on-surface-variant">
+            A personal pacing cap, not a platform-enforced limit — Instagram publishes no
+            official DM limit. This defaults to a conservative estimate; raise or lower it based
+            on how your own account behaves.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Input
+              type="number"
+              min={1}
+              placeholder="Daily DM budget"
+              value={dmBudgetInput}
+              onChange={(e) => {
+                setDmBudgetInput(e.target.value)
+                setDmBudgetSaved(false)
+              }}
+              className="w-full sm:max-w-[8rem]"
+            />
+            <Button
+              variant="secondary"
+              onClick={handleSaveDmBudget}
+              disabled={!dmBudgetInput.trim()}
+            >
+              Save
+            </Button>
+          </div>
+          {dmBudgetSaved && <p className="text-sm text-success">Daily DM budget saved.</p>}
         </CardContent>
       </Card>
 
