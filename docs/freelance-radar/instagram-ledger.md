@@ -31,7 +31,7 @@ Last updated: **2026-08-31** · Spec verified: **2026-08-28** · Code written: *
 | **A** | **Discover / JobDataLake repair** (audit fix plan) | `paused` | — | free |
 | — | Audit doc fixes (A6–A8, A10, A11) | `done` | — | none |
 | **B** | **Free keyless job feeds** | `done` | — | free, no signup |
-| **C** | **Gig sources** (Freelancer.com, Jobicy) | `todo` | none | free, no signup |
+| **C** | **Gig sources** (Freelancer.com, Jobicy) | `blocked` | C0 done, ToS ambiguous — **needs a free Freelancer.com OAuth app registration**, no longer keyless | free, no signup for Jobicy; Freelancer.com now needs signup |
 | 0 | Schema + DM budget setting | `todo` | Phase −1 merged | none |
 | 1 | Paste-and-parse bulk intake | `todo` | Phase 0 | none |
 | 2 | PageSpeed enrichment + auto-scoring | `blocked` | Phase 0; **needs a Google API key** | free, 25k/day |
@@ -257,8 +257,8 @@ this week", not "find a client worth keeping".
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| C0 | **Read Freelancer.com's API terms before writing any code** | `todo` | **The gate.** The endpoint answers with no key and no auth, which is not the same as being licensed for this use. If the terms forbid it, phase C is Jobicy only and the rest of this table is cut |
-| C1 | `freelancerProjects.ts` — normalise a project into a lead draft | `todo` | Not into `JobListing`: a project has a budget range, a bid count and no company, so forcing it through the job shape loses all three |
+| C0 | **Read Freelancer.com's API terms before writing any code** | `done` | Read 2026-09-10 at https://www.freelancer.com/about/apiterms. **Ambiguous, not clean.** There is an official API requiring OAuth app registration (`freelancer-oauth-v1` header); ToS opens "you must accept before using the API" and bars use "beyond what Freelancer.com intends to allow." The no-auth `/api/projects/0.1/projects/active/` response is almost certainly the site's own internal AJAX call, not an intentionally-public endpoint. Caching is explicitly allowed if refreshed ≤24h; redistribution/syndication is explicitly barred (single-user browsing fits the *spirit* fine). **Verdict: don't ship the current no-auth approach — register a free Application at https://developers.freelancer.com/ and call it OAuth-authenticated before C1.** |
+| C1 | `freelancerProjects.ts` — normalise a project into a lead draft | `todo` | **Blocked on C0's OAuth requirement** — needs an app registration + token flow added first, not a same-shape fetch. Not into `JobListing`: a project has a budget range, a bid count and no company, so forcing it through the job shape loses all three |
 | C2 | Currency rule: map `estimatedValue` **only when the budget is USD** | `todo` | `Lead` has no currency field, and mixing INR 37,500 with USD 250 makes the Pipeline total meaningless. Always write `Budget: 37500-75000 INR` into `notes` regardless |
 | C3 | Bid count and submit date into `notes`, newest first | `todo` | A project with 55 bids is already lost. Surfacing it is what makes the list triageable |
 | C4 | Source dropdown entry; pass the keyword to `query=` server-side | `todo` | First source with a real search — do not filter it client-side like the boards |
