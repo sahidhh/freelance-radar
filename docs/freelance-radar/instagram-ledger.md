@@ -35,7 +35,7 @@ Last updated: **2026-08-31** · Spec verified: **2026-08-28** · Code written: *
 | 0 | Schema + DM budget setting | `done` | Phase −1 merged | none |
 | 1 | Paste-and-parse bulk intake | `done` | Phase 0 | none |
 | 2 | PageSpeed enrichment + auto-scoring | `done` | Phase 0 | free, 25k/day |
-| 3 | Prototype-first templates + capped send queue | `todo` | Phase 1 + 2 done, Q2/Q3 answered 2026-09-10 | none |
+| 3 | Prototype-first templates + capped send queue | `done` | — | none |
 | 4 | Google Places discovery | `deferred` | User declined billing-card setup 2026-09-10; **20-lead field test of phases 1–3 first** regardless | 1k calls/mo free — but **requires a billing card on file** |
 | 5 | Reply-rate tracking per pitch variant | `todo` | Phase 3 has shipped real sends | none |
 | 6 | SERP APIs, Meta Business Discovery, Apify | `todo` | never, realistically | varies |
