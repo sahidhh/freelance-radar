@@ -309,11 +309,17 @@ computed on import, so scoring stops being hand-entered.
 
 1. ~~Target city / market.~~ **Resolved above:** United States first,
    tourist-town hospitality, Google Places as the only discovery source.
-2. How is the prototype generated — by hand, or from the lead's own Instagram
-   photos and bio? Affects whether phase 2 needs a generation step or just a
-   `prototypeUrl` field. *(The field is specified either way.)*
-3. Are the sales tips a fixed rotating library or written per lead? Affects
-   whether `outreachTemplate.ts` needs a tips-content module.
+2. ~~How is the prototype generated?~~ **Resolved 2026-09-10, corrected same
+   day:** the mockup is still built **by hand** (per the build-order section
+   above — "20+ minutes of budget per lead, enough to build the mockup before
+   messaging"), no code auto-generates it. The user's source material for that
+   manual build is the lead's own Instagram photos and bio, not a from-scratch
+   design. `prototypeUrl` (Phase 0) just stores wherever the finished mockup
+   ends up hosted — no generation step belongs in this codebase.
+3. ~~Are the sales tips a fixed rotating library or written per lead?~~
+   **Resolved 2026-09-10:** written per lead is primary; `outreachTemplate.ts`
+   falls back to a small fixed rotating tips-content module when no per-lead
+   tips exist.
 4. Starting daily DM cap — 10 remains the right default. Note what verification
    established: **Instagram publishes no DM limits at all.** Every number in
    this document traces to vendors who sell DM-automation tools, who have an
@@ -338,7 +344,7 @@ discovery source, and the primary pitch — see above.
 | 1 | Paste-and-parse bulk intake | Cheapest item in either document; ~300 leads/month is easy to source by hand and this makes it fast |
 | 2 | PageSpeed Insights enrichment + auto-scoring | Free at 25,000/day, CORS-clean, no proxy; turns an opinion pitch into evidence and widens the ICP |
 | 3 | Prototype-first templates (OTA-commission variant for hospitality, PSI variant for the rest) + DM-aware send queue with hard cap | Aims squarely at the capped stage |
-| 4 | Google Places discovery tab (US tourist-town lodging + hospitality first) — **after** the 20-result field test | Sole discovery source; for lodging, `websiteUri` alone qualifies the lead and often hands over the handle. Needs a serverless proxy and a pinned field mask — the only phase here with a cost surface |
+| 4 | Google Places discovery tab (US tourist-town lodging + hospitality first) — **after** the 20-result field test | Sole discovery source; for lodging, `websiteUri` alone qualifies the lead and often hands over the handle. Needs a pinned field mask — the only phase here with a cost surface |
 | 5 | Reply-rate tracking per pitch variant | The only metric that can multiply results |
 | 6 | Everything else — SERP APIs, Meta Business Discovery, Apify | Each saves ≤2 hours/month. Last, or never. **OSM is cut, not deferred** — see market selection. |
 

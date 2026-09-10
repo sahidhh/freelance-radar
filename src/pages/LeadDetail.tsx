@@ -1,14 +1,15 @@
 import { useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import { Mail, Pencil, Trash2, CheckCircle2, ClipboardCopy } from "lucide-react"
+import { Link, useNavigate, useParams } from "react-router-dom"
+import { Mail, Pencil, Trash2, CheckCircle2, ClipboardCopy, Gauge } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { StatusBadge } from "@/components/StatusBadge"
 import { useActivitiesForLead, useLead, useOutreachForLead } from "@/lib/hooks"
-import { deleteLead, setStatus } from "@/db/leads"
+import { deleteLead, setStatus, updateLead } from "@/db/leads"
 import { formatDate, formatValueRange } from "@/lib/format"
 import { getNextActionLabel, isTerminalStatus } from "@/lib/nextAction"
 import { buildResearchPrompt } from "@/lib/researchPrompt"
+import { getPsiApiKey, runPagespeedCheck } from "@/lib/pagespeed"
 import type { LeadStatus } from "@/db/schema"
 
 function primaryAction(
@@ -54,6 +55,9 @@ export default function LeadDetail() {
   const { outreach } = useOutreachForLead(id)
   const { activities } = useActivitiesForLead(id)
   const [copied, setCopied] = useState(false)
+  const [psiChecking, setPsiChecking] = useState(false)
+  const [psiError, setPsiError] = useState("")
+  const [psiNeedsKey, setPsiNeedsKey] = useState(false)
 
   if (!lead) return <div>Loading…</div>
 
@@ -66,6 +70,32 @@ export default function LeadDetail() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  async function handleCheckPagespeed() {
+    if (!lead || !lead.website) return
+    const key = getPsiApiKey()
+    if (!key) {
+      setPsiNeedsKey(true)
+      setPsiError("")
+      return
+    }
+    setPsiNeedsKey(false)
+    setPsiError("")
+    setPsiChecking(true)
+    try {
+      const { score, failingMetric } = await runPagespeedCheck(lead.website, key)
+      await updateLead(lead.id, {
+        psiScore: score,
+        psiFailingMetric: failingMetric,
+        psiCheckedAt: new Date().toISOString(),
+      })
+      refresh()
+    } catch (err) {
+      setPsiError(err instanceof Error ? err.message : "PageSpeed check failed.")
+    } finally {
+      setPsiChecking(false)
+    }
+  }
+
   async function handleDelete() {
     if (!lead) return
     if (window.confirm(`Permanently delete "${lead.businessName}"? This cannot be undone.`)) {
@@ -76,21 +106,30 @@ export default function LeadDetail() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-2">
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
+        <div className="flex min-w-0 flex-col gap-2">
           <StatusBadge status={lead.status} />
-          <h2 className="text-3xl font-semibold text-on-surface">{lead.businessName}</h2>
+          <h2 className="text-2xl font-semibold text-on-surface sm:text-3xl">
+            {lead.businessName}
+          </h2>
           {lead.opportunity && (
             <p className="max-w-2xl text-sm text-on-surface-variant">{lead.opportunity}</p>
           )}
         </div>
-        <div className="flex shrink-0 gap-2">
-          <Button variant="secondary" onClick={() => navigate(`/leads/${lead.id}/edit`)}>
+        <div className="flex w-full shrink-0 flex-wrap gap-2 sm:w-auto">
+          <Button
+            variant="secondary"
+            onClick={() => navigate(`/leads/${lead.id}/edit`)}
+            className="flex-1 sm:flex-none"
+          >
             <Pencil className="h-4 w-4" />
             Edit Details
           </Button>
           {lead.email && (
-            <a href={`mailto:${lead.email}`} className={buttonVariants({ variant: "secondary" })}>
+            <a
+              href={`mailto:${lead.email}`}
+              className={buttonVariants({ variant: "secondary", className: "flex-1 sm:flex-none" })}
+            >
               <Mail className="h-4 w-4" />
               Email Client
             </a>
@@ -100,7 +139,7 @@ export default function LeadDetail() {
 
       {!isTerminalStatus(lead.status) && (
         <Card className="border-primary bg-primary-container text-on-primary">
-          <CardContent className="flex items-center justify-between gap-4 p-0">
+          <CardContent className="flex flex-col items-start gap-4 p-0 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="text-xs font-semibold uppercase tracking-wide opacity-80">
                 Next Action
@@ -112,6 +151,7 @@ export default function LeadDetail() {
               <Button
                 variant="secondary"
                 onClick={() => action.onClick(navigate, refresh)}
+                className="w-full sm:w-auto"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 {action.label}
@@ -121,9 +161,9 @@ export default function LeadDetail() {
         </Card>
       )}
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 flex flex-col gap-6">
-          <div className="flex items-center justify-between">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-base font-medium text-on-surface">Research</h3>
             <Button variant="secondary" size="sm" onClick={handleCopyPrompt}>
               <ClipboardCopy className="h-3.5 w-3.5" />
@@ -179,13 +219,13 @@ export default function LeadDetail() {
               {outreach.map((o) => (
                 <div
                   key={o.id}
-                  className="flex items-center justify-between rounded border border-outline-variant px-3 py-2 text-sm"
+                  className="flex flex-col gap-1.5 rounded border border-outline-variant px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <span className="font-medium">{o.type.replace(/_/g, " ")}</span>
                     <span className="ml-2 text-on-surface-variant">{o.subject}</span>
                   </div>
-                  <div className="flex items-center gap-3 font-mono text-xs text-on-surface-variant">
+                  <div className="flex shrink-0 items-center gap-3 font-mono text-xs text-on-surface-variant">
                     <span>{o.status}</span>
                     <span>{formatDate(o.sentAt)}</span>
                   </div>
@@ -203,9 +243,12 @@ export default function LeadDetail() {
                 <p className="text-sm text-on-surface-variant">No activity yet.</p>
               )}
               {activities.map((a) => (
-                <div key={a.id} className="flex items-center justify-between text-sm">
+                <div
+                  key={a.id}
+                  className="flex flex-col gap-0.5 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+                >
                   <span className="text-on-surface">{a.description}</span>
-                  <span className="font-mono text-xs text-on-surface-variant">
+                  <span className="shrink-0 font-mono text-xs text-on-surface-variant">
                     {formatDate(a.createdAt)}
                   </span>
                 </div>
@@ -239,6 +282,59 @@ export default function LeadDetail() {
               )}
             </CardContent>
           </Card>
+
+          {lead.website && (
+            <Card>
+              <CardHeader>
+                <CardTitle>PageSpeed</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3 text-sm">
+                {lead.psiScore != null ? (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-on-surface-variant">Mobile score</span>
+                      <span className="font-mono">{lead.psiScore}/100</span>
+                    </div>
+                    {lead.psiFailingMetric && (
+                      <div className="flex justify-between gap-3">
+                        <span className="text-on-surface-variant">Worst metric</span>
+                        <span className="font-mono">{lead.psiFailingMetric}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-on-surface-variant">Checked</span>
+                      <span>{formatDate(lead.psiCheckedAt)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-on-surface-variant">Not checked yet.</p>
+                )}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleCheckPagespeed}
+                  disabled={psiChecking}
+                  className="w-full sm:w-auto"
+                >
+                  <Gauge className="h-3.5 w-3.5" />
+                  {psiChecking
+                    ? "Checking…"
+                    : lead.psiScore != null
+                      ? "Re-check PageSpeed"
+                      : "Check PageSpeed"}
+                </Button>
+                {psiNeedsKey && (
+                  <div className="flex flex-wrap items-center gap-2 rounded border border-outline px-3 py-2 text-xs text-on-surface-variant">
+                    <span>No PageSpeed Insights API key set.</span>
+                    <Link to="/settings" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                      Add key
+                    </Link>
+                  </div>
+                )}
+                {psiError && <p className="text-sm text-error">{psiError}</p>}
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

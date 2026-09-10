@@ -3,6 +3,7 @@ import { Download, Upload } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import {
   EXPORT_VERSION,
   exportAllData,
@@ -15,6 +16,8 @@ import {
 } from "@/db/exportImport"
 import { getAllLeads } from "@/db/leads"
 import { getStoredApiKey, setStoredApiKey } from "@/lib/jobDataLake"
+import { getDmDailyBudget, setDmDailyBudget } from "@/lib/dmBudget"
+import { getPsiApiKey, setPsiApiKey } from "@/lib/pagespeed"
 import type { Lead } from "@/db/schema"
 
 function downloadFile(filename: string, content: string, mimeType: string) {
@@ -57,6 +60,31 @@ export default function Settings() {
     setApiKeySaved(false)
   }
 
+  const [dmBudgetInput, setDmBudgetInput] = useState(String(getDmDailyBudget()))
+  const [dmBudgetSaved, setDmBudgetSaved] = useState(false)
+
+  function handleSaveDmBudget() {
+    const n = Number(dmBudgetInput)
+    if (!Number.isFinite(n) || n <= 0) return
+    setDmDailyBudget(n)
+    setDmBudgetInput(String(getDmDailyBudget()))
+    setDmBudgetSaved(true)
+  }
+
+  const [psiKeyInput, setPsiKeyInput] = useState(getPsiApiKey())
+  const [psiKeySaved, setPsiKeySaved] = useState(false)
+
+  function handleSavePsiKey() {
+    setPsiApiKey(psiKeyInput.trim())
+    setPsiKeySaved(true)
+  }
+
+  function handleClearPsiKey() {
+    setPsiApiKey("")
+    setPsiKeyInput("")
+    setPsiKeySaved(false)
+  }
+
   const [jsonErrors, setJsonErrors] = useState<string[]>([])
   const [jsonPending, setJsonPending] = useState<JsonImportState | null>(null)
   const [jsonSuccess, setJsonSuccess] = useState(false)
@@ -64,6 +92,7 @@ export default function Settings() {
   const [csvErrors, setCsvErrors] = useState<string[]>([])
   const [csvPending, setCsvPending] = useState<CsvImportState | null>(null)
   const [csvSuccess, setCsvSuccess] = useState(false)
+  const [csvPasteText, setCsvPasteText] = useState("")
 
   async function handleExportJson() {
     const payload = await exportAllData()
@@ -127,6 +156,21 @@ export default function Settings() {
     setCsvPending({ leads })
   }
 
+  function handleCsvPasteParse() {
+    if (!csvPasteText.trim()) return
+    setCsvSuccess(false)
+    setCsvPending(null)
+    setCsvErrors([])
+
+    const { leads, errors } = parseLeadsCsv(csvPasteText)
+    if (errors.length > 0) {
+      setCsvErrors(errors)
+      return
+    }
+    setCsvPending({ leads })
+    setCsvPasteText("")
+  }
+
   async function confirmCsvImport() {
     if (!csvPending) return
     await importLeadsCsv(csvPending.leads)
@@ -154,7 +198,7 @@ export default function Settings() {
             . The key is stored only in this browser (localStorage) and sent directly to
             JobDataLake's API — never to any other server.
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Input
               type="password"
               placeholder="JobDataLake API key"
@@ -163,7 +207,7 @@ export default function Settings() {
                 setApiKeyInput(e.target.value)
                 setApiKeySaved(false)
               }}
-              className="max-w-sm"
+              className="w-full sm:max-w-sm"
             />
             <Button variant="secondary" onClick={handleSaveApiKey} disabled={!apiKeyInput.trim()}>
               Save
@@ -180,18 +224,85 @@ export default function Settings() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Daily DM Budget</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <p className="text-sm text-on-surface-variant">
+            A personal pacing cap, not a platform-enforced limit — Instagram publishes no
+            official DM limit. This defaults to a conservative estimate; raise or lower it based
+            on how your own account behaves.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Input
+              type="number"
+              min={1}
+              placeholder="Daily DM budget"
+              value={dmBudgetInput}
+              onChange={(e) => {
+                setDmBudgetInput(e.target.value)
+                setDmBudgetSaved(false)
+              }}
+              className="w-full sm:max-w-[8rem]"
+            />
+            <Button
+              variant="secondary"
+              onClick={handleSaveDmBudget}
+              disabled={!dmBudgetInput.trim()}
+            >
+              Save
+            </Button>
+          </div>
+          {dmBudgetSaved && <p className="text-sm text-success">Daily DM budget saved.</p>}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>PageSpeed Insights</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <p className="text-sm text-on-surface-variant">
+            Runs a mobile Lighthouse performance check on a lead's website, so the outreach pitch
+            is evidence-based instead of opinion-based. The key is stored only in this browser.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Input
+              type="password"
+              placeholder="PageSpeed Insights API key"
+              value={psiKeyInput}
+              onChange={(e) => {
+                setPsiKeyInput(e.target.value)
+                setPsiKeySaved(false)
+              }}
+              className="w-full sm:max-w-sm"
+            />
+            <Button variant="secondary" onClick={handleSavePsiKey} disabled={!psiKeyInput.trim()}>
+              Save
+            </Button>
+            {getPsiApiKey() && (
+              <Button variant="ghost" onClick={handleClearPsiKey}>
+                Clear
+              </Button>
+            )}
+          </div>
+          {psiKeySaved && <p className="text-sm text-success">API key saved.</p>}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Export</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <p className="text-sm text-on-surface-variant">
             Schema version: <span className="font-mono">{EXPORT_VERSION}</span>
           </p>
-          <div className="flex gap-3">
-            <Button variant="secondary" onClick={handleExportJson}>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button variant="secondary" onClick={handleExportJson} className="sm:w-auto">
               <Download className="h-4 w-4" />
               Export JSON (all data)
             </Button>
-            <Button variant="secondary" onClick={handleExportCsv}>
+            <Button variant="secondary" onClick={handleExportCsv} className="sm:w-auto">
               <Download className="h-4 w-4" />
               Export CSV (leads)
             </Button>
@@ -229,7 +340,7 @@ export default function Settings() {
             </div>
           )}
           {jsonPending && (
-            <div className="flex items-center justify-between rounded border border-outline-variant px-3 py-2 text-sm">
+            <div className="flex flex-col gap-3 rounded border border-outline-variant px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
               <span>
                 Replace existing data with {jsonPending.payload.leads.length} leads,{" "}
                 {jsonPending.payload.outreach.length} outreach, {jsonPending.payload.projects.length}{" "}
@@ -271,6 +382,23 @@ export default function Settings() {
               onChange={handleCsvFileChange}
             />
           </div>
+          <div className="flex flex-col gap-3">
+            <Textarea
+              placeholder="Or paste CSV text here (same columns as the export)"
+              value={csvPasteText}
+              onChange={(e) => setCsvPasteText(e.target.value)}
+              rows={6}
+              className="font-mono text-xs"
+            />
+            <Button
+              variant="secondary"
+              onClick={handleCsvPasteParse}
+              disabled={!csvPasteText.trim()}
+              className="sm:w-auto"
+            >
+              Parse pasted CSV
+            </Button>
+          </div>
           {csvErrors.length > 0 && (
             <div className="rounded border border-error px-3 py-2 text-sm text-error">
               {csvErrors.map((err, i) => (
@@ -279,7 +407,7 @@ export default function Settings() {
             </div>
           )}
           {csvPending && (
-            <div className="flex items-center justify-between rounded border border-outline-variant px-3 py-2 text-sm">
+            <div className="flex flex-col gap-3 rounded border border-outline-variant px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
               <span>Import {csvPending.leads.length} lead(s) from the file?</span>
               <div className="flex gap-2">
                 <Button size="sm" onClick={confirmCsvImport}>

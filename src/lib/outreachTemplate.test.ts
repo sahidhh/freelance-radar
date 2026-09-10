@@ -68,6 +68,72 @@ describe("buildOutreachDraft", () => {
   })
 })
 
+describe("buildOutreachDraft — prototype-first pitch", () => {
+  const prototypeLead: Lead = {
+    ...baseLead,
+    prototypeUrl: "https://example.com/mockups/acme",
+  }
+
+  it("uses the old generic template unchanged when prototypeUrl is not set", () => {
+    const draft = buildOutreachDraft(baseLead, "initial")
+    expect(draft.subject).toBe("Quick idea for Acme Plumbing Co")
+    expect(draft.body).not.toContain("mockup")
+  })
+
+  it("gives a no-website lead the OTA-commission framing", () => {
+    const draft = buildOutreachDraft({ ...prototypeLead, website: "" }, "initial")
+    expect(draft.body).toMatch(/commission/i)
+    expect(draft.body).toMatch(/Booking\.com|Airbnb/)
+  })
+
+  it("gives a website+psiScore lead the PSI framing referencing the actual score", () => {
+    const draft = buildOutreachDraft(
+      { ...prototypeLead, website: "https://acme.example", psiScore: 31, psiFailingMetric: "LCP 8.4s on 4G" },
+      "initial"
+    )
+    expect(draft.body).toContain("31/100")
+    expect(draft.body).toContain("LCP 8.4s on 4G")
+  })
+
+  it("falls back to a generic performance framing when psiScore hasn't been checked yet", () => {
+    const draft = buildOutreachDraft(
+      { ...prototypeLead, website: "https://acme.example", psiScore: null },
+      "initial"
+    )
+    expect(draft.body).not.toMatch(/undefined/i)
+    expect(draft.body).not.toMatch(/\bnull\b/i)
+    expect(draft.body).toMatch(/slow|phone|performs/i)
+  })
+
+  it("includes the prototypeUrl link in the body when set", () => {
+    const draft = buildOutreachDraft(prototypeLead, "initial")
+    expect(draft.body).toContain("https://example.com/mockups/acme")
+  })
+
+  it("appends the opt-out line for channel=email", () => {
+    const draft = buildOutreachDraft(prototypeLead, "initial", "email")
+    expect(draft.body).toMatch(/no thanks/i)
+  })
+
+  it("omits the opt-out line for channel=instagram", () => {
+    const draft = buildOutreachDraft(prototypeLead, "initial", "instagram")
+    expect(draft.body).not.toMatch(/no thanks/i)
+  })
+
+  it("uses per-lead tips from suggestedSolution/notes when non-empty", () => {
+    const draft = buildOutreachDraft(
+      { ...prototypeLead, suggestedSolution: "a booking widget", notes: "" },
+      "initial"
+    )
+    expect(draft.body).toContain("a booking widget")
+  })
+
+  it("falls back to the fixed tips library when suggestedSolution and notes are both empty", () => {
+    const draft = buildOutreachDraft({ ...prototypeLead, suggestedSolution: "", notes: "" }, "initial")
+    expect(draft.body).toMatch(/Book Now|stock images|header|reviews|mobile|starting rate/)
+  })
+})
+
 describe("nextOutreachType", () => {
   it("returns initial when nothing has been sent", () => {
     expect(nextOutreachType([])).toBe("initial")

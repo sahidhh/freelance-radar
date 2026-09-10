@@ -51,6 +51,16 @@ export interface Lead {
   archived: boolean
   createdAt: string
   updatedAt: string
+  /** Instagram handle without the leading "@". `sourceUrl` stays the profile URL. */
+  instagramHandle?: string
+  /** Per-lead live prototype/mockup link. */
+  prototypeUrl?: string
+  /** Lighthouse mobile performance score, 0-100. */
+  psiScore?: number | null
+  /** The single worst PageSpeed metric, in words, e.g. "LCP 8.4s on 4G". */
+  psiFailingMetric?: string
+  /** ISO timestamp of the last PageSpeed check, so a stale score can be refreshed. */
+  psiCheckedAt?: string | null
 }
 
 export type OutreachType = "initial" | "follow_up_1" | "follow_up_2"

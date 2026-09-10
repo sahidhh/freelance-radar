@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest"
 import arbeitnowResponse from "./__fixtures__/arbeitnow.json"
+import arbeitnowPage2Response from "./__fixtures__/arbeitnow-page2.json"
 import remoteokResponse from "./__fixtures__/remoteok.json"
 import remotiveResponse from "./__fixtures__/remotive.json"
-import { matchesQuery, normalizeArbeitnow, normalizeRemoteOK, normalizeRemotive } from "./jobFeeds"
+import {
+  hasArbeitnowNextPage,
+  matchesQuery,
+  normalizeArbeitnow,
+  normalizeRemoteOK,
+  normalizeRemotive,
+} from "./jobFeeds"
 import { jobToLeadDraft } from "./jobDataLake"
 
 // Every fixture here is an unedited slice of a real response captured on
@@ -89,6 +96,30 @@ describe("normalizeArbeitnow", () => {
 
   it("reports non-remote listings as on_site", () => {
     expect(jobs[0].remoteType).toBe("on_site")
+  })
+})
+
+describe("hasArbeitnowNextPage", () => {
+  it("is true when links.next is a URL", () => {
+    expect(hasArbeitnowNextPage(arbeitnowResponse)).toBe(true)
+  })
+
+  it("is false when links.next is null, as on the last page", () => {
+    expect(hasArbeitnowNextPage(arbeitnowPage2Response)).toBe(false)
+  })
+
+  it("is false on an unexpected payload", () => {
+    expect(hasArbeitnowNextPage({})).toBe(false)
+    expect(hasArbeitnowNextPage(null)).toBe(false)
+  })
+})
+
+describe("normalizeArbeitnow on a second page", () => {
+  it("normalizes a page with no further pages the same way", () => {
+    const jobs = normalizeArbeitnow(arbeitnowPage2Response)
+    expect(jobs).toHaveLength(1)
+    expect(jobs[0].company).toBe("Beispiel GmbH")
+    expect(jobs[0].remoteType).toBe("fully_remote")
   })
 })
 

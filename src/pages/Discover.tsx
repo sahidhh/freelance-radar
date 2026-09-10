@@ -17,7 +17,7 @@ import {
   type JobListing,
   type RemoteType,
 } from "@/lib/jobDataLake"
-import { FEEDS, fetchFeed, type FeedId } from "@/lib/jobFeeds"
+import { FEEDS, fetchArbeitnowPage, fetchFeed, type FeedId } from "@/lib/jobFeeds"
 
 type SourceId = FeedId | "jobdatalake"
 
@@ -40,6 +40,12 @@ export default function Discover() {
   const [addingId, setAddingId] = useState<string | null>(null)
   const [searched, setSearched] = useState(false)
 
+  // Arbeitnow-only pagination: the other two feeds return their whole board
+  // in one request, so this stays unused (and the button hidden) for them.
+  const [arbeitnowPage, setArbeitnowPage] = useState(1)
+  const [hasMoreArbeitnow, setHasMoreArbeitnow] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+
   const isJobDataLake = sourceId === "jobdatalake"
   const sourceLabel = isJobDataLake
     ? "JobDataLake"
@@ -54,16 +60,40 @@ export default function Discover() {
     setLoading(true)
     setError(null)
     setSearched(true)
+    setArbeitnowPage(1)
+    setHasMoreArbeitnow(false)
     try {
-      const results = isJobDataLake
-        ? await searchJobs({ query, location, employmentType, remoteType }, apiKey)
-        : await fetchFeed(sourceId as FeedId, { query, location })
-      setJobs(results)
+      if (sourceId === "arbeitnow") {
+        const { jobs: results, hasNext } = await fetchArbeitnowPage(1, { query, location })
+        setJobs(results)
+        setHasMoreArbeitnow(hasNext)
+      } else {
+        const results = isJobDataLake
+          ? await searchJobs({ query, location, employmentType, remoteType }, apiKey)
+          : await fetchFeed(sourceId as FeedId, { query, location })
+        setJobs(results)
+      }
     } catch (err) {
       setError(err instanceof JobFeedError ? err.message : "Search failed. Try again.")
       setJobs([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleLoadMore() {
+    setLoadingMore(true)
+    setError(null)
+    try {
+      const nextPage = arbeitnowPage + 1
+      const { jobs: newJobs, hasNext } = await fetchArbeitnowPage(nextPage, { query, location })
+      setJobs((prev) => [...prev, ...newJobs])
+      setArbeitnowPage(nextPage)
+      setHasMoreArbeitnow(hasNext)
+    } catch (err) {
+      setError(err instanceof JobFeedError ? err.message : "Search failed. Try again.")
+    } finally {
+      setLoadingMore(false)
     }
   }
 
@@ -84,7 +114,7 @@ export default function Discover() {
         <CardHeader>
           <CardTitle>Search for work</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-wrap items-end gap-3">
+        <CardContent className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-end">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-on-surface-variant">Source</label>
             <Select
@@ -97,8 +127,10 @@ export default function Discover() {
                 setJobs([])
                 setSearched(false)
                 setError(null)
+                setArbeitnowPage(1)
+                setHasMoreArbeitnow(false)
               }}
-              className="w-40"
+              className="w-full sm:w-40"
             >
               {FEEDS.map((feed) => (
                 <option key={feed.id} value={feed.id}>
@@ -114,7 +146,7 @@ export default function Discover() {
               placeholder="e.g. shopify developer"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-56"
+              className="w-full sm:w-56"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -123,7 +155,7 @@ export default function Discover() {
               placeholder="e.g. Remote"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-44"
+              className="w-full sm:w-44"
             />
           </div>
           {isJobDataLake && (
@@ -135,7 +167,7 @@ export default function Discover() {
                 <Select
                   value={employmentType}
                   onChange={(e) => setEmploymentType(e.target.value as EmploymentType | "")}
-                  className="w-40"
+                  className="w-full sm:w-40"
                 >
                   <option value="">Any</option>
                   <option value="contract">Contract</option>
@@ -149,7 +181,7 @@ export default function Discover() {
                 <Select
                   value={remoteType}
                   onChange={(e) => setRemoteType(e.target.value as RemoteType | "")}
-                  className="w-36"
+                  className="w-full sm:w-36"
                 >
                   <option value="">Any</option>
                   <option value="fully_remote">Fully remote</option>
@@ -191,7 +223,7 @@ export default function Discover() {
           const alreadyAdded = job.applyUrl !== "" && existingSourceUrls.has(job.applyUrl)
           return (
             <Card key={job.id}>
-              <CardContent className="flex items-center justify-between gap-4 py-4">
+              <CardContent className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4 py-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-on-surface">{job.title}</span>
@@ -240,6 +272,14 @@ export default function Discover() {
           )
         })}
       </div>
+
+      {sourceId === "arbeitnow" && hasMoreArbeitnow && jobs.length > 0 && (
+        <div className="flex justify-center">
+          <Button variant="secondary" onClick={handleLoadMore} disabled={loadingMore}>
+            {loadingMore ? "Loading…" : "Load more"}
+          </Button>
+        </div>
+      )}
 
       {/* Remote OK's API terms require a followed link back when their data is shown. */}
       {sourceId === "remoteok" && jobs.length > 0 && (
