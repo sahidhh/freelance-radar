@@ -154,7 +154,7 @@ export default function Settings() {
             . The key is stored only in this browser (localStorage) and sent directly to
             JobDataLake's API — never to any other server.
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Input
               type="password"
               placeholder="JobDataLake API key"
@@ -163,7 +163,7 @@ export default function Settings() {
                 setApiKeyInput(e.target.value)
                 setApiKeySaved(false)
               }}
-              className="max-w-sm"
+              className="w-full sm:max-w-sm"
             />
             <Button variant="secondary" onClick={handleSaveApiKey} disabled={!apiKeyInput.trim()}>
               Save
