@@ -216,6 +216,13 @@ them.** Phase B solved "no lead source at all". It did not solve "leads I can
 actually bid on", because every source it added is an employment board. Gig
 marketplaces are a different kind of site and none of them were tested.
 
+**Re-verified live 2026-09-10** (item 9, same-day as C0): RemoteOK still 0/99
+contract/freelance-tagged rows; Freelancer.com still 200/no-auth/CORS `*`,
+`bid_stats` present on all 100 sampled rows, fixed/hourly split 75/25 (close
+to the original 83/17 — different sample window), one project sampled at 279
+bids — worse than the original 55-bid example, not better. Original
+measurements hold.
+
 ### Candidates, all probed live on 2026-08-31
 
 CORS is quoted first because it is still the only thing that decides whether
