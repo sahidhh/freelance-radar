@@ -68,8 +68,8 @@ expensive the longer they sit.
 |---|---|---|---|
 | H1 | Merge `claude/mobile-ui-overhaul-g7iffk` | `todo` | 1 commit, 9 files, no PR. Touches `Leads`/`Outreach`/`Settings`/`LeadForm`/`App` — the exact files phases 0–3 edit. **Do this before phase 0**; the conflict cost only grows. |
 | H2 | Merge this research/spec branch | `todo` | `claude/instagram-outreach-research-vxvtlj`, docs only, zero merge risk |
-| H3 | Fast-forward local `master` | `todo` | Local `master` sits at `1f9c763`, far behind `origin/master` |
-| H4 | `npm install`, confirm `build` + `test` green | `done` | Done 2026-08-28. `npx tsc -b` exits 0; **37 tests across 6 files pass** — that is the real baseline to protect (the completion report's "34 across 5" is stale, see audit A9) |
+| H3 | Fast-forward local `master` | `done` | Local `master` already matches `origin/master` as of this session (2026-09-10) |
+| H4 | `npm install`, confirm `build` + `test` green | `done` | Done 2026-08-28. `npx tsc -b` exits 0; **54 tests across 7 files pass** — verified this session (2026-09-10) via `npm test`, all passing — that is the real baseline to protect |
 
 ---
 
@@ -389,7 +389,8 @@ early optimises the half of the funnel that is not the constraint.
 
 **Cost:** Enterprise SKU (set by `websiteUri`), 1,000 free calls/month, ~$35/1,000
 after. At 20 results per call that is ~20,000 places/month free against a need of
-~300. Free in practice, but **only with the pinned mask**.
+~300. Free in practice, but **only with the pinned mask** — and only with a
+**Google Places billing card on file**; Google will not issue the key without one.
 
 ---
 

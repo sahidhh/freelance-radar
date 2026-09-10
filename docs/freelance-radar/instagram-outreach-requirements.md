@@ -338,7 +338,7 @@ discovery source, and the primary pitch — see above.
 | 1 | Paste-and-parse bulk intake | Cheapest item in either document; ~300 leads/month is easy to source by hand and this makes it fast |
 | 2 | PageSpeed Insights enrichment + auto-scoring | Free at 25,000/day, CORS-clean, no proxy; turns an opinion pitch into evidence and widens the ICP |
 | 3 | Prototype-first templates (OTA-commission variant for hospitality, PSI variant for the rest) + DM-aware send queue with hard cap | Aims squarely at the capped stage |
-| 4 | Google Places discovery tab (US tourist-town lodging + hospitality first) — **after** the 20-result field test | Sole discovery source; for lodging, `websiteUri` alone qualifies the lead and often hands over the handle. Needs a serverless proxy and a pinned field mask — the only phase here with a cost surface |
+| 4 | Google Places discovery tab (US tourist-town lodging + hospitality first) — **after** the 20-result field test | Sole discovery source; for lodging, `websiteUri` alone qualifies the lead and often hands over the handle. Needs a pinned field mask — the only phase here with a cost surface |
 | 5 | Reply-rate tracking per pitch variant | The only metric that can multiply results |
 | 6 | Everything else — SERP APIs, Meta Business Discovery, Apify | Each saves ≤2 hours/month. Last, or never. **OSM is cut, not deferred** — see market selection. |
 
