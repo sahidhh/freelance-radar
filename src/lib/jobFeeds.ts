@@ -96,6 +96,12 @@ export function normalizeRemotive(payload: unknown): JobListing[] {
   }))
 }
 
+/** Reads `links.next` off a raw Arbeitnow page response: non-null means another page exists. */
+export function hasArbeitnowNextPage(payload: unknown): boolean {
+  const next = (payload as { links?: { next?: unknown } })?.links?.next
+  return typeof next === "string" && next.length > 0
+}
+
 export function normalizeArbeitnow(payload: unknown): JobListing[] {
   const data = (payload as { data?: unknown })?.data
   if (!Array.isArray(data)) return []
@@ -129,10 +135,36 @@ export function matchesQuery(job: JobListing, query: string): boolean {
   return q.split(/\s+/).every((word) => haystack.includes(word))
 }
 
+/** Arbeitnow-only: fetches one page and reports whether `links.next` says there's another. */
+export async function fetchArbeitnowPage(
+  page: number,
+  filters: { query?: string; location?: string } = {}
+): Promise<{ jobs: JobListing[]; hasNext: boolean }> {
+  const feed = FEEDS.find((f) => f.id === "arbeitnow")!
+  const url = page > 1 ? `${feed.url}?page=${page}` : feed.url
+
+  let res: Response
+  try {
+    res = await fetch(url)
+  } catch (err) {
+    throw new JobFeedError(`Could not reach ${feed.label}. Check your connection.`, { cause: err })
+  }
+  if (!res.ok) throw new JobFeedError(`${feed.label} request failed (HTTP ${res.status}).`)
+
+  const payload = await res.json()
+  const terms = [filters.query, filters.location].filter(Boolean).join(" ")
+  return {
+    jobs: normalizeArbeitnow(payload).filter((job) => matchesQuery(job, terms)),
+    hasNext: hasArbeitnowNextPage(payload),
+  }
+}
+
 export async function fetchFeed(
   id: FeedId,
   filters: { query?: string; location?: string } = {}
 ): Promise<JobListing[]> {
+  if (id === "arbeitnow") return (await fetchArbeitnowPage(1, filters)).jobs
+
   const feed = FEEDS.find((f) => f.id === id)
   if (!feed) throw new JobFeedError(`Unknown feed "${id}".`)
 

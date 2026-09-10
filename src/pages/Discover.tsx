@@ -17,7 +17,7 @@ import {
   type JobListing,
   type RemoteType,
 } from "@/lib/jobDataLake"
-import { FEEDS, fetchFeed, type FeedId } from "@/lib/jobFeeds"
+import { FEEDS, fetchArbeitnowPage, fetchFeed, type FeedId } from "@/lib/jobFeeds"
 
 type SourceId = FeedId | "jobdatalake"
 
@@ -40,6 +40,12 @@ export default function Discover() {
   const [addingId, setAddingId] = useState<string | null>(null)
   const [searched, setSearched] = useState(false)
 
+  // Arbeitnow-only pagination: the other two feeds return their whole board
+  // in one request, so this stays unused (and the button hidden) for them.
+  const [arbeitnowPage, setArbeitnowPage] = useState(1)
+  const [hasMoreArbeitnow, setHasMoreArbeitnow] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+
   const isJobDataLake = sourceId === "jobdatalake"
   const sourceLabel = isJobDataLake
     ? "JobDataLake"
@@ -54,16 +60,40 @@ export default function Discover() {
     setLoading(true)
     setError(null)
     setSearched(true)
+    setArbeitnowPage(1)
+    setHasMoreArbeitnow(false)
     try {
-      const results = isJobDataLake
-        ? await searchJobs({ query, location, employmentType, remoteType }, apiKey)
-        : await fetchFeed(sourceId as FeedId, { query, location })
-      setJobs(results)
+      if (sourceId === "arbeitnow") {
+        const { jobs: results, hasNext } = await fetchArbeitnowPage(1, { query, location })
+        setJobs(results)
+        setHasMoreArbeitnow(hasNext)
+      } else {
+        const results = isJobDataLake
+          ? await searchJobs({ query, location, employmentType, remoteType }, apiKey)
+          : await fetchFeed(sourceId as FeedId, { query, location })
+        setJobs(results)
+      }
     } catch (err) {
       setError(err instanceof JobFeedError ? err.message : "Search failed. Try again.")
       setJobs([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleLoadMore() {
+    setLoadingMore(true)
+    setError(null)
+    try {
+      const nextPage = arbeitnowPage + 1
+      const { jobs: newJobs, hasNext } = await fetchArbeitnowPage(nextPage, { query, location })
+      setJobs((prev) => [...prev, ...newJobs])
+      setArbeitnowPage(nextPage)
+      setHasMoreArbeitnow(hasNext)
+    } catch (err) {
+      setError(err instanceof JobFeedError ? err.message : "Search failed. Try again.")
+    } finally {
+      setLoadingMore(false)
     }
   }
 
@@ -97,6 +127,8 @@ export default function Discover() {
                 setJobs([])
                 setSearched(false)
                 setError(null)
+                setArbeitnowPage(1)
+                setHasMoreArbeitnow(false)
               }}
               className="w-full sm:w-40"
             >
@@ -240,6 +272,14 @@ export default function Discover() {
           )
         })}
       </div>
+
+      {sourceId === "arbeitnow" && hasMoreArbeitnow && jobs.length > 0 && (
+        <div className="flex justify-center">
+          <Button variant="secondary" onClick={handleLoadMore} disabled={loadingMore}>
+            {loadingMore ? "Loading…" : "Load more"}
+          </Button>
+        </div>
+      )}
 
       {/* Remote OK's API terms require a followed link back when their data is shown. */}
       {sourceId === "remoteok" && jobs.length > 0 && (
