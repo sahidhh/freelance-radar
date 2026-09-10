@@ -31,7 +31,7 @@ Last updated: **2026-08-31** · Spec verified: **2026-08-28** · Code written: *
 | **A** | **Discover / JobDataLake repair** (audit fix plan) | `done` | — | free |
 | — | Audit doc fixes (A6–A8, A10, A11) | `done` | — | none |
 | **B** | **Free keyless job feeds** | `done` | — | free, no signup |
-| **C** | **Gig sources** (Freelancer.com, Jobicy) | `blocked` | C0 done, ToS ambiguous — **needs a free Freelancer.com OAuth app registration**, no longer keyless. Registration itself is now blocked on Freelancer.com requiring payment + email verification on the account first | free, no signup for Jobicy; Freelancer.com now needs signup |
+| **C** | **Gig sources** (Freelancer.com, Jobicy) | `paused` | C0 done, ToS ambiguous — **needs a free Freelancer.com OAuth app registration**, no longer keyless. Paused 2026-09-10 by user decision (not just blocked): registration needs payment + email verification on the Freelancer.com account first — email done, payment still outstanding. **To do:** once payment verification is complete, register the app at https://accounts.freelancer.com/settings/develop, then build C1–C7 | free, no signup for Jobicy; Freelancer.com now needs signup |
 | 0 | Schema + DM budget setting | `done` | Phase −1 merged | none |
 | 1 | Paste-and-parse bulk intake | `done` | Phase 0 | none |
 | 2 | PageSpeed enrichment + auto-scoring | `done` | Phase 0 | free, 25k/day |
